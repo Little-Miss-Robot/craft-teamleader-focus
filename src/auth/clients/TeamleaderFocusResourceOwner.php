@@ -1,6 +1,6 @@
 <?php
 
-namespace craftpulse\teamleader\auth\providers;
+namespace craftpulse\teamleader\auth\clients;
 
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Tool\ArrayAccessorTrait;

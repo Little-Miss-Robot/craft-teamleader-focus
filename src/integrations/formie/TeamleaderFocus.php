@@ -12,15 +12,24 @@ namespace craftpulse\teamleader\integrations\formie;
 
 use Craft;
 use craft\helpers\App;
+use craft\helpers\Json;
 
 use craftpulse\teamleader\auth\providers\TeamleaderFocus as TeamleaderFocusProvider;
 
+use Throwable;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+
+use verbb\formie\base\Integration;
 use verbb\auth\base\OAuthProviderInterface;
 use verbb\auth\models\Token;
 use verbb\formie\base\Crm;
+use verbb\formie\elements\Submission;
+use verbb\formie\errors\IntegrationException;
+use verbb\formie\models\IntegrationField;
+use verbb\formie\models\IntegrationFormSettings;
+
 use yii\base\Exception;
 
 /**
@@ -33,9 +42,6 @@ use yii\base\Exception;
  */
 class TeamleaderFocus extends Crm implements OAuthProviderInterface
 {
-
-    // Static Methods
-    // =========================================================================
     /**
      * @inheritdoc
      */
@@ -53,6 +59,19 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     {
         return true;
     }
+
+    // Properties
+    // =========================================================================
+
+    public bool $mapToContacts = false;
+    public bool $mapToCompanies = false;
+    public bool $mapToDeals = false;
+    public bool $linkToCompany = false;
+
+    public ?array $contactsFieldMapping = null;
+    public ?array $companiesFieldMapping = null;
+    public ?array $dealsFieldMapping = null;
+
 
     // Public Methods
     // =========================================================================
@@ -133,16 +152,312 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         return $config;
     }
 
-    /**
-     * @return array
-     */
-    public function getAuthorizationUrlOptions(): array
+    public function getFieldMapping(): mixed
     {
-        $options = parent::getAuthorizationUrlOptions();
+        return '';
+    }
 
-        $options['scope'] = [
+    public function sendPayload(Submission $submission): bool
+    {
+        try {
+            $contactValues = $this->getFieldMappingValues($submission, $this->contactsFieldMapping, 'contacts');
+            $companyValues = $this->getFieldMappingValues($submission, $this->companiesFieldMapping, 'companies');
+            $dealsValues = $this->getFieldMappingValues($submission, $this->dealsFieldMapping, 'deals');
+
+            $userId = null;
+            $companyId = null;
+
+            if ($this->mapToContacts) {
+                $contactPayload = $this->_prepPayload($contactValues, 'contacts');
+
+                $response = $this->deliverPayload($submission, 'contacts.add', $contactPayload);
+
+                if ($response === false) {
+                    return true;
+                }
+
+                $userId = $response['data']['id'] ?? null;
+
+                if (is_null($userId)) {
+                    Integration::error($this, Craft::t('formie', 'Missing return “id” {response}. Sent payload {payload}', [
+                        'response' => Json::encode($response),
+                        'payload' => Json::encode($contactValues),
+                    ]), true);
+
+                    return false;
+                }
+            }
+
+            if ($this->mapToCompanies) {
+                $companyPayload = $this->_prepPayload($companyValues, 'companies');
+
+                $response = $this->deliverPayload($submission, 'companies.add', $companyPayload);
+
+                if ($response === false) {
+                    return true;
+                }
+
+                $companyId = $response['data']['id'] ?? null;
+
+                if (is_null($companyId)) {
+                    Integration::error($this, Craft::t('formie', 'Missing return “id” {response}. Sent payload {payload}', [
+                        'response' => Json::encode($response),
+                        'payload' => Json::encode($companyValues),
+                    ]), true);
+
+                    return false;
+                } else {
+                    if($userId && $companyId && $this->linkToCompany) {
+                        $linkPayload = [
+                            'id' => $userId,
+                            'company_id' => $companyId,
+                        ];
+
+                        $response = $this->deliverPayload($submission, 'contacts.linkToCompany', $linkPayload);
+
+                        if ($response === false) {
+                            return true;
+                        }
+                    }
+
+                }
+            }
+
+            if ($this->mapToDeals && ($userId || $companyId)) {
+                $options = [
+                    'contact_person_id' => $userId,
+                    'company_id' => $companyId,
+                ];
+                $dealPayload = $this->_prepPayload($dealsValues, 'deals', $options);
+
+                $response = $this->deliverPayload($submission, 'deals.create', $dealPayload);
+
+                if ($response === false) {
+                    return true;
+                }
+
+                $dealId = $response['data']['id'] ?? null;
+
+                if (is_null($dealId)) {
+                    Integration::error($this, Craft::t('formie', 'Missing return “id” {response}. Sent payload {payload}', [
+                        'response' => Json::encode($response),
+                        'payload' => Json::encode($dealsValues),
+                    ]), true);
+
+                    return false;
+                }
+            }
+        } catch (Throwable $error) {
+            Integration::apiError($this, $error);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @return IntegrationFormSettings
+     * @throws IntegrationException
+     */
+    public function fetchFormSettings(): IntegrationFormSettings
+    {
+        $settings = [];
+
+        try {
+            if ($this->mapToContacts) {
+                $fields = $this->_fetchCustomFields('contact');
+
+                $settings['contacts'] = array_merge([
+                    new IntegrationField([
+                        'handle' => 'salutation',
+                        'name' => Craft::t('formie', 'Salutation'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'first_name',
+                        'name' => Craft::t('formie', 'First Name'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'last_name',
+                        'name' => Craft::t('formie', 'Last Name'),
+                        'required' => true,
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'email',
+                        'name' => Craft::t('formie', 'Email address'),
+                        'required' => true,
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'mobile_phone',
+                        'name' => Craft::t('formie', 'Mobile number'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'phone',
+                        'name' => Craft::t('formie', 'Phone number'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'language',
+                        'name' => Craft::t('formie', 'Language'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'marketing_mails_consent',
+                        'name' => Craft::t('formie', 'Marketing Mails Consent'),
+                        'type' => 'boolean',
+                    ]),
+                ], $this->_getCustomFields($fields));
+            }
+
+            if ($this->mapToCompanies) {
+                $fields = $this->_fetchCustomFields('company');
+
+                $settings['companies'] = array_merge([
+                    new IntegrationField([
+                        'handle' => 'name',
+                        'name' => Craft::t('formie', 'Company Name'),
+                        'required' => true,
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'email',
+                        'name' => Craft::t('formie', 'Email address'),
+                        'required' => true,
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'mobile_phone',
+                        'name' => Craft::t('formie', 'Mobile number'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'phone',
+                        'name' => Craft::t('formie', 'Phone number'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'vat_number',
+                        'name' => Craft::t('formie', 'VAT Number'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'national_identification_number',
+                        'name' => Craft::t('formie', 'National Identification Number'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'website',
+                        'name' => Craft::t('formie', 'Website'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'language',
+                        'name' => Craft::t('formie', 'Language'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'marketing_mails_consent',
+                        'name' => Craft::t('formie', 'Marketing Mails Consent'),
+                        'type' => 'boolean',
+                    ]),
+                ], $this->_getCustomFields($fields));
+            }
+
+            if ($this->mapToDeals) {
+                // Add Prep Payload commands
+                $fields = $this->_fetchCustomFields('deal');
+
+                $settings['deals'] = array_merge([], $this->_getCustomFields($fields));
+            }
+        } catch (Throwable $error) {
+            Integration::apiError($this, $error);
+        }
+
+        return new IntegrationFormSettings($settings);
+    }
+
+    private function _fetchCustomFields(string $context): ?array {
+        $filters = [
+            'filter' => [
+                'context' => $context,
+            ]
         ];
 
-        return $options;
+        $response = $this->request('POST', 'customFieldDefinitions.list', $filters);
+
+        return empty($response) ? null : $response['data'];
+    }
+
+    private function _getCustomFields(mixed $fields): array
+    {
+        $customFields = [];
+
+        foreach ($fields as $field) {
+            $type = $field['type'] ?? null;
+
+            if (!$type) {
+                continue;
+            }
+
+            $customFields[] = new IntegrationField([
+                'handle' => $field['id'],
+                'name' => $field['label'],
+                'type' => $this->_convertFieldType($type),
+                'sourceType' => $type,
+            ]);
+        }
+
+        return $customFields;
+    }
+
+    private function _convertFieldType(string $fieldType): string
+    {
+        $fieldTypes= [
+            'multi_select' => IntegrationField::TYPE_ARRAY,
+            'date' => IntegrationField::TYPE_DATE,
+            'money' => IntegrationField::TYPE_FLOAT,
+            'auto_increment' => IntegrationField::TYPE_NUMBER,
+            'integer' => IntegrationField::TYPE_NUMBER,
+            'number' => IntegrationField::TYPE_NUMBER,
+            'boolean' => IntegrationField::TYPE_BOOLEAN,
+            'telephone' => IntegrationField::TYPE_PHONE,
+        ];
+
+        return $fieldTypes[$fieldType] ?? IntegrationField::TYPE_STRING;
+    }
+
+    private function _prepPayload(array $fields, string $context, array $options = []): array
+    {
+        $payload = $fields;
+
+        if ($context === 'contacts' or $context === 'companies') {
+            if(isset($payload['email'])) {
+                $payload['emails'][] = [
+                    'type' => 'primary',
+                    'email' => $payload['email'],
+                ];
+                unset($payload['email']);
+            }
+
+            if(isset($payload['phone'])) {
+                $payload['telephones'][] = [
+                    'type' => 'phone',
+                    'number' => $payload['phone'],
+                ];
+                unset($payload['phone']);
+            }
+
+            if(isset($payload['mobile_phone'])) {
+                $payload['telephones'][] = [
+                    'type' => 'phone',
+                    'number' => $payload['mobile_phone'],
+                ];
+                unset($payload['phone']);
+            }
+        }
+
+        if ($context === 'deals') {
+            $payload['lead'] = [
+                'customer' => [
+                    'type' => !is_null($options['company_id']) ? 'company' : 'contact',
+                    'id' => !is_null($options['company_id']) ? $options['company_id'] : $options['contact_person_id'],
+                ],
+                'contact_person_id' => $options['contact_person_id'],
+            ];
+            // TODO: This should be a field in the settings
+            $payload['title'] = Craft::t('formie', 'Website deal generation');
+        }
+
+        return $payload;
     }
 }
