@@ -9,6 +9,7 @@
 {% set mapToCompanies = form.settings.integrations[handle].mapToCompanies ?? '' %}
 {% set mapToDeals = form.settings.integrations[handle].mapToDeals ?? '' %}
 {% set linkToCompany = form.settings.integrations[handle].linkToCompany ?? '' %}
+{% set dealTitle = form.settings.integrations[handle].dealTitle ?? '' %}
 
 <field-select
     label="{{ 'Opt-In Field'|t('formie') }}"
@@ -105,6 +106,14 @@
         }) }}
 
         <div id="map-to-deals" class="{{ not mapToDeals ? 'hidden' }}">
+
+            {{ forms.textField({
+                label: 'Deal Title' | t('formie'),
+                instructions: 'Enter a title to use for the created deal.' | t('formie'),
+                name: 'dealTitle',
+                value: dealTitle,
+            }) }}
+
             <integration-field-mapping
                 label="{{ 'Deals Field Mapping' | t('formie') }}"
                 instructions="{{ 'Choose how your form fields should map to your {name} {label} fields.' | t('formie', { name: displayName, label: 'Deals' }) }}"

@@ -63,13 +63,38 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     // Properties
     // =========================================================================
 
+    /**
+     * @var bool
+     */
     public bool $mapToContacts = false;
+    /**
+     * @var bool
+     */
     public bool $mapToCompanies = false;
+    /**
+     * @var bool
+     */
     public bool $mapToDeals = false;
+    /**
+     * @var bool
+     */
     public bool $linkToCompany = false;
+    /**
+     * @var string|null
+     */
+    public ?string $dealTitle = null;
 
+    /**
+     * @var array|null
+     */
     public ?array $contactsFieldMapping = null;
+    /**
+     * @var array|null
+     */
     public ?array $companiesFieldMapping = null;
+    /**
+     * @var array|null
+     */
     public ?array $dealsFieldMapping = null;
 
 
@@ -454,8 +479,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 ],
                 'contact_person_id' => $options['contact_person_id'],
             ];
-            // TODO: This should be a field in the settings
-            $payload['title'] = Craft::t('formie', 'Website deal generation');
+            $payload['title'] = $this->dealTitle;
         }
 
         return $payload;
