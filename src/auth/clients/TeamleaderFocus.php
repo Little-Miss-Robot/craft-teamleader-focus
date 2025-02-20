@@ -3,8 +3,9 @@
 namespace craftpulse\teamleader\auth\clients;
 
 use Craft;
-use craftpulse\teamleader\auth\clients\TeamleaderFocusResourceOwner;
 
+use craftpulse\teamleader\auth\clients\TeamleaderFocusResourceOwner;
+use craftpulse\teamleader\auth\grant\TeamleaderFocusRefreshTokenGrant;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
@@ -22,6 +23,13 @@ class TeamleaderFocus extends AbstractProvider
 
     const OAUTH_BASE_URL = 'https://focus.teamleader.eu/oauth2/';
     const API_BASE_URL = 'https://api.focus.teamleader.eu/';
+
+    public function __construct(array $options = [], array $collaborators = [])
+    {
+        parent::__construct($options, $collaborators);
+
+        $this->getGrantFactory()->setGrant('refresh_token', new TeamleaderFocusRefreshTokenGrant());
+    }
 
     /**
      * @inheritdoc

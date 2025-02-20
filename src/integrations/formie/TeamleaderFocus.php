@@ -16,6 +16,7 @@ use craft\helpers\Json;
 
 use craftpulse\teamleader\auth\providers\TeamleaderFocus as TeamleaderFocusProvider;
 
+use Illuminate\Support\Collection;
 use Throwable;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -97,7 +98,6 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      */
     public ?array $dealsFieldMapping = null;
 
-
     // Public Methods
     // =========================================================================
     /**
@@ -177,11 +177,6 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         return $config;
     }
 
-    public function getFieldMapping(): mixed
-    {
-        return '';
-    }
-
     public function sendPayload(Submission $submission): bool
     {
         try {
@@ -194,22 +189,54 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
             if ($this->mapToContacts) {
                 $contactPayload = $this->_prepPayload($contactValues, 'contacts');
+                $endpoint = 'contacts.add';
 
-                $response = $this->deliverPayload($submission, 'contacts.add', $contactPayload);
+                // First check if we already have a user with the primary email address attached.
+
+                $filterPayload = [
+                    'filter' => [
+                        'email' => [
+                            'type' => 'primary',
+                            'email' => $contactValues['email'],
+                        ],
+                    ]
+                ];
+
+                $response = $this->deliverPayload($submission, 'contacts.list', $filterPayload);
+                $currentUser = Collection::make($response['data'])->first();
+
+                // Make sure we send a "contacts.update" request if we have an actual response id.
+                if(!empty($currentUser['id'])) {
+                    $endpoint = 'contacts.update';
+                    $contactPayload['id'] = $currentUser['id'];
+                }
+
+                $response = $this->deliverPayload($submission, $endpoint, $contactPayload);
 
                 if ($response === false) {
                     return true;
                 }
 
-                $userId = $response['data']['id'] ?? null;
+                if($endpoint === 'contacts.add') {
+                    $userId = $response['data']['id'] ?? null;
 
-                if (is_null($userId)) {
-                    Integration::error($this, Craft::t('formie', 'Missing return “id” {response}. Sent payload {payload}', [
-                        'response' => Json::encode($response),
-                        'payload' => Json::encode($contactValues),
-                    ]), true);
+                    if (is_null($userId)) {
+                        Integration::error($this, Craft::t('formie', 'Missing return “id” {response}. Sent payload {payload}', [
+                            'response' => Json::encode($response),
+                            'payload' => Json::encode($contactValues),
+                        ]), true);
 
-                    return false;
+                        return false;
+                    }
+                } else {
+                    if (!empty($response)) {
+                        Integration::error($this, Craft::t('formie', 'Invalid response {response} Sent payload {payload}', [
+                            'response' => Json::encode($response),
+                            'payload' => Json::encode($contactValues),
+                        ]), true);
+
+                        return false;
+                    }
                 }
             }
 
@@ -250,9 +277,10 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
             if ($this->mapToDeals && ($userId || $companyId)) {
                 $options = [
-                    'contact_person_id' => $userId,
-                    'company_id' => $companyId,
+                    'contact_person_id' => $userId ?? '',
+                    'company_id' => $companyId ?? '',
                 ];
+
                 $dealPayload = $this->_prepPayload($dealsValues, 'deals', $options);
 
                 $response = $this->deliverPayload($submission, 'deals.create', $dealPayload);
@@ -337,7 +365,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
                 $settings['companies'] = array_merge([
                     new IntegrationField([
-                        'handle' => 'name',
+                        'handle' => 'company_name',
                         'name' => Craft::t('formie', 'Company Name'),
                         'required' => true,
                     ]),
@@ -379,8 +407,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             }
 
             if ($this->mapToDeals) {
-                // Add Prep Payload commands
-                $fields = $this->_fetchCustomFields('deal');
+                $fields = $this->_fetchCustomFields('sale');
 
                 $settings['deals'] = array_merge([], $this->_getCustomFields($fields));
             }
@@ -399,8 +426,13 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         ];
 
         $response = $this->request('POST', 'customFieldDefinitions.list', $filters);
+        $customFields = $response['data'];
 
-        return empty($response) ? null : $response['data'];
+        if (empty($customFields)) {
+            return null;
+        } else {
+            return Collection::make($customFields)->filter(fn($field) => $field['context'] === $context)->toArray();
+        }
     }
 
     private function _getCustomFields(mixed $fields): array
@@ -444,8 +476,9 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     private function _prepPayload(array $fields, string $context, array $options = []): array
     {
         $payload = $fields;
+        $payload['context'] = $context;
 
-        if ($context === 'contacts' or $context === 'companies') {
+        if (in_array($context, ['contacts', 'companies'])) {
             if(isset($payload['email'])) {
                 $payload['emails'][] = [
                     'type' => 'primary',
@@ -469,6 +502,8 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 ];
                 unset($payload['phone']);
             }
+
+            return $payload;
         }
 
         if ($context === 'deals') {

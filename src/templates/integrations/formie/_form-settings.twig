@@ -85,7 +85,7 @@
                 name-label="{{ integration.displayName() }}"
                 id="companies-field-mapping"
                 name="companiesFieldMapping"
-                :value="get(form, 'settings.integrations.{{ handle }}.contactsFieldMapping')"
+                :value="get(form, 'settings.integrations.{{ handle }}.companiesFieldMapping')"
                 :rows="get(settings, 'companies')"
             ></integration-field-mapping>
 
@@ -111,6 +111,7 @@
                 label: 'Deal Title' | t('formie'),
                 instructions: 'Enter a title to use for the created deal.' | t('formie'),
                 name: 'dealTitle',
+                required: true,
                 value: dealTitle,
             }) }}
 

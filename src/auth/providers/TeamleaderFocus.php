@@ -10,6 +10,7 @@ class TeamleaderFocus extends TeamleaderFocusClient
 {
     // Traits
     // =========================================================================
+
     use ProviderTrait;
 
 
@@ -18,6 +19,6 @@ class TeamleaderFocus extends TeamleaderFocusClient
 
     public function getBaseApiUrl(?Token $token): ?string
     {
-        return null;
+        return 'https://api.focus.teamleader.eu/';
     }
 }
