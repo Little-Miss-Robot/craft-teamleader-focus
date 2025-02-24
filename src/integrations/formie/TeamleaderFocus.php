@@ -185,6 +185,11 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         return $config;
     }
 
+    /**
+     * @param Submission $submission
+     * @return bool
+     * @throws IntegrationException
+     */
     public function sendPayload(Submission $submission): bool
     {
         try {
@@ -323,7 +328,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                     return false;
                 }
             }
-        } catch (Throwable $error) {
+        } catch (Exception $error) {
             Integration::apiError($this, $error);
 
             return false;
@@ -468,13 +473,17 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
                 $settings['deals'] = array_merge([], $this->_getCustomFields($fields));
             }
-        } catch (Throwable $error) {
+        } catch (Exception $error) {
             Integration::apiError($this, $error);
         }
 
         return new IntegrationFormSettings($settings);
     }
 
+    /**
+     * @param string $context
+     * @return array|null
+     */
     private function _fetchCustomFields(string $context): ?array {
         $filters = [
             'filter' => [
@@ -492,6 +501,10 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         }
     }
 
+    /**
+     * @param mixed $fields
+     * @return array
+     */
     private function _getCustomFields(mixed $fields): array
     {
         $customFields = [];
@@ -514,6 +527,10 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         return $customFields;
     }
 
+    /**
+     * @param string $fieldType
+     * @return string
+     */
     private function _convertFieldType(string $fieldType): string
     {
         $fieldTypes= [
@@ -530,6 +547,12 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         return $fieldTypes[$fieldType] ?? IntegrationField::TYPE_STRING;
     }
 
+    /**
+     * @param array $fields
+     * @param string $context
+     * @param array $options
+     * @return array
+     */
     private function _prepPayload(array $fields, string $context, array $options = []): array
     {
         $payload = $fields;
@@ -616,7 +639,11 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         }
     }
 
-    private function _formatVatNumber(string $vatNumber): string
+    /**
+     * @param string $vatNumber
+     * @return bool|string
+     */
+    private function _formatVatNumber(string $vatNumber): bool|string
     {
         // Extract first two and ensure it's valid A-Z
         $countryCode = strtoupper(substr($vatNumber, 0, 2));
