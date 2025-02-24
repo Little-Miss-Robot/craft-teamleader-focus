@@ -88,7 +88,7 @@ class TeamleaderFocusResourceOwner implements ResourceOwnerInterface
      * parameter prefilled.
      *
      * @param $key
-     * @param null $default
+     * @param mixed $default
      * @return mixed
      */
     private function getValueByKey(string $key, mixed $default = null): mixed
