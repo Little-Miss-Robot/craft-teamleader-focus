@@ -13,9 +13,12 @@ use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Class Teamleader
+ * Class TeamleaderFocus
  *
- * @package Nascom\OAuth2\Client\Provider
+ * @author      CraftPulse
+ * @package     Teamleader
+ * @since       5.0.0
+ *
  */
 class TeamleaderFocus extends AbstractProvider
 {

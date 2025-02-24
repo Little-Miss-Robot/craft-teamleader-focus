@@ -6,13 +6,27 @@ namespace craftpulse\teamleader\auth\grant;
 
 use League\OAuth2\Client\Grant\AbstractGrant;
 
+/**
+ * Class TeamleaderFocusRefreshTokenGrant
+ *
+ * @author      CraftPulse
+ * @package     Teamleader
+ * @since       5.0.0
+ *
+ */
 class TeamleaderFocusRefreshTokenGrant extends AbstractGrant
 {
+    /**
+     * @return string
+     */
     protected function getName(): string
     {
         return 'refresh_token';
     }
 
+    /**
+     * @return string[]
+     */
     protected function getRequiredRequestParameters(): array
     {
         return [
@@ -20,6 +34,11 @@ class TeamleaderFocusRefreshTokenGrant extends AbstractGrant
         ];
     }
 
+    /**
+     * @param array $defaults
+     * @param array $options
+     * @return array
+     */
     public function prepareRequestParameters(array $defaults, array $options): array
     {
         return [
