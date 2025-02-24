@@ -32,7 +32,7 @@ class TeamleaderFocusResourceOwner implements ResourceOwnerInterface
      */
     public function getId(): array|int|string|null
     {
-        return $this->getValueByKey('id', '');
+        return $this->getValueByKey('id');
     }
 
     public function getAccount(): array|string|null
@@ -91,7 +91,7 @@ class TeamleaderFocusResourceOwner implements ResourceOwnerInterface
      * @param null $default
      * @return mixed
      */
-    private function getValueByKey($key, $default = null): mixed
+    private function getValueByKey(string $key, mixed $default = null): mixed
     {
         return $this->arrayAccessorTraitGetValueByKey(
             $this->response,

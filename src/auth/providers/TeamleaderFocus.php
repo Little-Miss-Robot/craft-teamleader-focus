@@ -2,7 +2,7 @@
 
 namespace craftpulse\teamleader\auth\providers;
 
-use craftpulse\teamleader\auth\clients\TeamLeaderFocus as TeamleaderFocusClient;
+use craftpulse\teamleader\auth\clients\TeamleaderFocus as TeamleaderFocusClient;
 use verbb\auth\base\ProviderTrait;
 use verbb\auth\models\Token;
 
