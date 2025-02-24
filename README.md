@@ -1,6 +1,6 @@
 # Teamleader plugin for Craft CMS 5.x
 
-The Teamleader plugin is a powerful tool for ...
+The Teamleader plugin is a powerful tool for integrating Craft CMS with Teamleader Focus, allowing seamless synchronization of contacts, companies, and deals directly from Formie forms.
 
 ![Screenshot](./resources/img/teamleader.jpg)
 
