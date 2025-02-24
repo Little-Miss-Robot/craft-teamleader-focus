@@ -2,15 +2,16 @@
   "name": "craftpulse/craft-teamleader",
   "description": "Teamleader plugin",
   "type": "craft-plugin",
-  "version": "5.0.0-alpha.1",
+  "version": "5.0.0",
   "keywords": [
     "craft",
     "cms",
     "craftcms",
     "craft-plugin",
-    "strong passwords",
-    "passwords",
-    "security"
+    "teamleader",
+    "teamleader focus",
+    "marketing",
+    "lead generation"
   ],
   "support":{
     "email": "support@craftpulse.com",
