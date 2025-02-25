@@ -1,4 +1,4 @@
-# Teamleader plugin for Craft CMS 5.x
+# Teamleader Focus plugin for Craft CMS 5.x
 
 The Teamleader plugin is a powerful tool for integrating Craft CMS with Teamleader Focus, allowing seamless synchronization of contacts, companies, and deals directly from Formie forms.
 
@@ -22,11 +22,11 @@ Seamlessly integrate **Teamleader Focus** with **Craft CMS** and **Formie forms*
    ```
 2. Install the plugin via Composer:
    ```sh
-   composer require craftpulse/craft-teamleader
+   composer require craftpulse/craft-teamleader-focus
    ```
 3. Install the plugin:
    ```sh
-   craft plugin/install teamleader
+   craft plugin/install teamleader-focus
    ```
    Alternatively, activate it via **Settings → Plugins** in the Craft Control Panel.
 
@@ -34,11 +34,11 @@ Seamlessly integrate **Teamleader Focus** with **Craft CMS** and **Formie forms*
 
 1. Install the Teamleader plugin:
    ```sh
-   ddev composer require craftpulse/craft-teamleader
+   ddev composer require craftpulse/craft-teamleader-focus
    ```
 2. Install the plugin in Craft CMS:
    ```sh
-   ddev craft plugin/install teamleader
+   ddev craft plugin/install teamleader-focus
    ```
 
 ---
@@ -61,7 +61,7 @@ Seamlessly integrate **Teamleader Focus** with **Craft CMS** and **Formie forms*
 
 ---
 
-## Mapping Form Fields to Teamleader
+## Mapping Form Fields to Teamleader Focus
 
 ### Mapping Options in Form Settings
 
@@ -121,7 +121,7 @@ When configuring Teamleader integration in a Formie form, you will see the follo
 
 ---
 
-## Syncing Data with Teamleader
+## Syncing Data with Teamleader Focus
 
 - When a user submits a Formie form, **Teamleader Focus** will create contacts, companies, or deals based on the mapped fields.
 - You can verify the data in your **Teamleader account**.

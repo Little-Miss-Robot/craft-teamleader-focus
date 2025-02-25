@@ -1,6 +1,6 @@
 {
-  "name": "craftpulse/craft-teamleader",
-  "description": "Teamleader plugin",
+  "name": "craftpulse/craft-teamleader-focus",
+  "description": "Teamleader Focus plugin",
   "type": "craft-plugin",
   "version": "5.0.0",
   "keywords": [
@@ -15,8 +15,8 @@
   ],
   "support":{
     "email": "support@craftpulse.com",
-    "docs": "https://github.com/craftpulse/craft-teamleader/blob/v5/README.md",
-    "issues": "https://github.com/craftpulse/craft-teamleader/issues"
+    "docs": "https://github.com/craftpulse/craft-teamleader-focus/blob/v5/README.md",
+    "issues": "https://github.com/craftpulse/craft-teamleader-focus/issues"
   },
   "license": "proprietary",
   "authors": [
@@ -45,12 +45,12 @@
     }
   },
   "extra": {
-    "name": "Teamleader",
-    "handle": "teamleader",
+    "name": "Teamleader Focus",
+    "handle": "teamleader-focus",
     "developer": "CraftPulse",
     "developerUrl": "https://craftpulse.com",
-    "documentationUrl": "https://github.com/craftpulse/craft-teamleader/blob/v5/README.md",
-    "changelogUrl": "https://github.com/craftpulse/craft-teamleader/blob/v5/CHANGELOG.md",
+    "documentationUrl": "https://github.com/craftpulse/craft-teamleader-focus/blob/v5/README.md",
+    "changelogUrl": "https://github.com/craftpulse/craft-teamleader-focus/blob/v5/CHANGELOG.md",
     "class": "craftpulse\\teamleader\\Teamleader"
   },
   "scripts": {
