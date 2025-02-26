@@ -113,7 +113,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      */
     public function getIconUrl(): string
     {
-        return Craft::$app->getAssetManager()->getPublishedUrl("@craftpulse/teamleader/icon-mask.svg", true);
+        return Craft::$app->getAssetManager()->getPublishedUrl("@craftpulse/teamleader-focus/icon-mask.svg", true);
     }
 
     /**
@@ -135,7 +135,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     {
         $settings = $this->getSettingsHtmlVariables();
 
-        return Craft::$app->getView()->renderTemplate('teamleader/integrations/formie/_plugin-settings', $settings);
+        return Craft::$app->getView()->renderTemplate('teamleader-focus/integrations/formie/_plugin-settings', $settings);
     }
 
     /**
@@ -150,7 +150,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     {
         $formSettings = $this->getFormSettingsHtmlVariables($form);
 
-        return Craft::$app->getView()->renderTemplate('teamleader/integrations/formie/_form-settings', $formSettings);
+        return Craft::$app->getView()->renderTemplate('teamleader-focus/integrations/formie/_form-settings', $formSettings);
     }
 
     /**
