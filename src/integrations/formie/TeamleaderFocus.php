@@ -113,7 +113,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      */
     public function getIconUrl(): string
     {
-        return Craft::$app->getAssetManager()->getPublishedUrl("@craftpulse/teamleader-focus/icon-mask.svg", true);
+        return Craft::$app->getAssetManager()->getPublishedUrl("@craftpulse/teamleader/icon-mask.svg", true);
     }
 
     /**
