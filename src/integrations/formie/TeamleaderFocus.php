@@ -68,26 +68,37 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      * @var bool
      */
     public bool $mapToContacts = false;
+
     /**
      * @var bool
      */
     public bool $mapToCompanies = false;
+
     /**
      * @var bool
      */
     public bool $mapToDeals = false;
+
     /**
      * @var bool
      */
     public bool $linkToCompany = false;
+
+    /**
+     * @var bool
+     */
+    public bool $requireVatNumber = false;
+
     /**
      * @var string|null
      */
     public ?string $dealTitle = null;
+
     /**
      * @var string|null
      */
     public ?string $userId = null;
+
     /**
      * @var string|null
      */
@@ -256,21 +267,26 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 $endpoint = 'companies.add';
 
                 // First check if we already have a user with the primary email address attached.
+                // @TODO - we can make this a lot fancier to update stuff - need to check some Craft CMS templates to make it prettier these settings
 
-                $filterPayload = [
-                    'filter' => [
-                        'vat_number' => $this->_formatVatNumber($companyValues['vat_number']),
-                    ]
-                ];
+                // only do this if we have an actual VAT number - to save an API call.
+                // create an enum for types to make mapToCompanies or mapToContacts dynamically?
+                if(isset($companyPayload['vat_number'])) {
+                    $filterPayload = [
+                        'filter' => [
+                            'vat_number' => $this->_formatVatNumber($companyValues['vat_number']),
+                        ]
+                    ];
 
-                $response = $this->deliverPayload($submission, 'companies.list', $filterPayload);
-                $currentCompany = Collection::make($response['data'])->first();
+                    $response = $this->deliverPayload($submission, 'companies.list', $filterPayload);
+                    $currentCompany = Collection::make($response['data'])->first();
 
-                // Make sure we send a "contacts.update" request if we have an actual response id.
-                if(!empty($currentCompany['id'])) {
-                    $endpoint = 'companies.update';
-                    $companyPayload['id'] = $currentCompany['id'];
-                    $this->companyId = $currentCompany['id'];
+                    // Make sure we send a "contacts.update" request if we have an actual response id.
+                    if (!empty($currentCompany['id'])) {
+                        $endpoint = 'companies.update';
+                        $companyPayload['id'] = $currentCompany['id'];
+                        $this->companyId = $currentCompany['id'];
+                    }
                 }
 
                 $response = $this->deliverPayload($submission, $endpoint, $companyPayload);
@@ -417,7 +433,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                     new IntegrationField([
                         'handle' => 'email',
                         'name' => Craft::t('formie', 'Email address'),
-                        'required' => true,
+                        'required' => false,
                     ]),
                     // @TODO - build support for repeater fields, since Teamleader Focus supports multiple addresses in an array
                     new IntegrationField([
@@ -447,6 +463,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                     new IntegrationField([
                         'handle' => 'vat_number',
                         'name' => Craft::t('formie', 'VAT Number'),
+                        'required' => $this->requireVatNumber,
                     ]),
                     new IntegrationField([
                         'handle' => 'national_identification_number',
@@ -471,7 +488,18 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             if ($this->mapToDeals) {
                 $fields = $this->_fetchCustomFields('sale');
 
-                $settings['deals'] = array_merge([], $this->_getCustomFields($fields));
+                $settings['deals'] = array_merge([
+                    new IntegrationField([
+                        'handle' => 'title',
+                        'name' => Craft::t('formie', 'Deal Title'),
+                        'required' => true,
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'estimated_value',
+                        'name' => Craft::t('formie', 'Deal Value'),
+                        'required' => false,
+                    ]),
+                ], $this->_getCustomFields($fields));
             }
         } catch (Exception $error) {
             Integration::apiError($this, $error);
@@ -485,13 +513,17 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      * @return array|null
      */
     private function _fetchCustomFields(string $context): ?array {
-        $filters = [
+        $options = [
             'filter' => [
                 'context' => $context,
+            ],
+            // @TODO create setting.
+            'page' => [
+                'size' => 100,
             ]
         ];
 
-        $response = $this->request('POST', 'customFieldDefinitions.list', $filters);
+        $response = $this->request('POST', 'customFieldDefinitions.list', ['json' => $options]);
         $customFields = $response['data'];
 
         if (empty($customFields)) {
@@ -606,6 +638,14 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 ],
                 'contact_person_id' => $this->userId ?: '',
             ];
+
+            if(isset($payload['estimated_value'])) {
+                $payload['estimated_value'] = [
+                    'amount' => $payload['amount'],
+                    'currency' => 'EUR',
+                ];
+            }
+
             $payload['title'] = $this->dealTitle;
         }
 
@@ -643,6 +683,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      * @param string $vatNumber
      * @return bool|string
      */
+    // @TODO - create a helper for this.
     private function _formatVatNumber(string $vatNumber): bool|string
     {
         // Extract first two and ensure it's valid A-Z
