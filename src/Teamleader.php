@@ -14,7 +14,6 @@ use Craft;
 use craft\base\Plugin;
 
 use craftpulse\teamleader\integrations\formie\TeamleaderFocus;
-use craftpulse\teamleader\integrations\formie\fields\TeamleaderFocusRequestType;
 
 use verbb\formie\events\RegisterFieldsEvent;
 use verbb\formie\events\RegisterIntegrationsEvent;
@@ -78,14 +77,6 @@ class Teamleader extends Plugin {
             Integrations::EVENT_REGISTER_INTEGRATIONS,
             function (RegisterIntegrationsEvent $event) {
                 $event->crm[] = TeamleaderFocus::class;
-            }
-        );
-
-        Event::on(
-            Fields::class,
-            Fields::EVENT_REGISTER_FIELDS,
-            function (RegisterFieldsEvent $event) {
-                $event->fields[] = TeamleaderFocusRequestType::class;
             }
         );
     }

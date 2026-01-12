@@ -1,16 +1,20 @@
 # Release Notes for Teamleader
 
-- Added fields on Deals
-- Deal Title
-- Deal Value
+## 5.1.0 - 12-01-2026
 
-- Company
-- Made email optional to match API
-- Created option to optionally require VAT number
+### Added
+- Added "Remarks" integration field for creating remarks via forms
+- Added "estimated_value" integration field for pushing amounts to Teamleader Focus
 
-- Added option to set a size - so when users have a lot of custom fields, they can actually increase the base limit of 20.
+### Changed
+- Refactored VAT number formatting into a reusable helper function
+- Made email on companies optional to match Teamleader Focus API Specs
 
-- Fixed issue with the API calls on 'context' filters, now we actually only get the fields of correct context through the API.
+### Fixed
+- Fixed context filters not properly limiting API field results
+- Fixed custom fields not saving correctly to Teamleader Focus
+- Fixed address generation not conforming to Teamleader Focus API specs
+- Fixed mobile_phone mapping incorrectly unsetting `phone` instead of `mobile_phone`
 
 ## 5.0.2 - 10-03-2025
 ### Fixed

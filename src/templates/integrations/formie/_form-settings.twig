@@ -9,7 +9,6 @@
 {% set mapToCompanies = form.settings.integrations[handle].mapToCompanies ?? '' %}
 {% set mapToDeals = form.settings.integrations[handle].mapToDeals ?? '' %}
 {% set linkToCompany = form.settings.integrations[handle].linkToCompany ?? '' %}
-{% set requireVatNumber = form.settings.integrations[handle].requireVatNumber ?? '' %}
 {% set dealTitle = form.settings.integrations[handle].dealTitle ?? '' %}
 
 <field-select
@@ -21,16 +20,6 @@
 ></field-select>
 
 <hr>
-
-{# Add a custom Formie Field for this, with the preloaded enums? #}
-{# @TODO this should be done a lot better, the field select here should only have certain types of fields, maybe can ask Josh if possible? #}
-<field-select
-    label="{{ 'Request Type Field'|t('formie') }}"
-    instructions="{{ 'Choose a field to send a request type to {name}. For example, you might only wish to record a person or a company - this needs to use the Teamleader Focus Request Field.' | t('formie', { name: displayName }) }}"
-    id="request-type-field"
-    name="request-type-field"
-    :value="get(form, 'settings.integrations.{{ handle }}.requestTypeField')"
-></field-select>
 
 <integration-form-settings handle="{{ handle }}" :form-settings="{{ formSettings | json_encode }}">
     <template v-slot="{ get, isEmpty, input, settings, sourceId, loading, refresh, error, errorMessage, getSourceFields }">
@@ -90,14 +79,6 @@
                 id: 'linkToCompany',
                 name: 'linkToCompany',
                 on: linkToCompany,
-            }) }}
-
-            {{ forms.lightswitchField({
-                label: 'Require VAT Number'|t('formie'),
-                instructions: 'Whether the VAT Number should be required or not.' | t('formie', { name: displayName }),
-                id: 'requireVatNumber',
-                name: 'requireVatNumber',
-                on: requireVatNumber,
             }) }}
 
             <integration-field-mapping
