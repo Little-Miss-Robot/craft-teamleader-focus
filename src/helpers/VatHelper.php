@@ -6,7 +6,7 @@ class VatHelper
 {
     /**
      * @param string $vatNumber
-     * @return bool|false
+     * @return string|false
      */
     public static function formatVatNumber(string $vatNumber): string|false
     {
