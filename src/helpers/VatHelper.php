@@ -8,7 +8,7 @@ class VatHelper
      * @param string $vatNumber
      * @return bool|string
      */
-    public static function formatVatNumber(string $vatNumber): string
+    public static function formatVatNumber(string $vatNumber): string|false
     {
         // Extract first two and ensure it's valid A-Z
         $countryCode = strtoupper(substr($vatNumber, 0, 2));
