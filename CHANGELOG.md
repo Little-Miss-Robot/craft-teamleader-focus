@@ -1,11 +1,6 @@
 # Release Notes for Teamleader
 
-## 5.1.0.1 - 2026-01-12
-
-### Fixed
-- Fixed PHPStan return type in VatHelper::formatVatNumber()
-
-## 5.1.0 - 2026-01-12
+## 5.1.0 - 2026-01-13
 ### Added
 - Added "Remarks" integration field for creating remarks via forms
 - Added "estimated_value" integration field for pushing amounts to Teamleader Focus
@@ -19,6 +14,7 @@
 - Fixed custom fields not saving correctly to Teamleader Focus
 - Fixed address generation not conforming to Teamleader Focus API specs
 - Fixed mobile_phone mapping incorrectly unsetting `phone` instead of `mobile_phone`
+- Fixed PHPStan return type in VatHelper::formatVatNumber()
 
 ## 5.0.2 - 2025-03-10
 ### Fixed
