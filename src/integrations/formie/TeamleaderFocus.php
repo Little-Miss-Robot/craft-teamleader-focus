@@ -511,7 +511,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
     /**
      * @param string $context
-     * @return array|null
+     * @return array
      */
     private function _fetchCustomFields(string $context): array
     {
