@@ -1,5 +1,13 @@
 # Release Notes for Teamleader
 
+## 5.1.1 - 2026-01-15
+### Fixed
+- Fixed custom fields not being sent in the correct API format (now properly structured as `custom_fields` array)
+- Fixed `contact_person_id` sending empty string instead of being omitted when not applicable
+- Fixed `contact_person_id` now only included when customer is a company and a contact person exists
+- Fixed mobile phone type using `'phone'` instead of `'mobile'` for the telephone type
+- Removed `context` from API payload (internal use only, not an API field)
+
 ## 5.1.0 - 2026-01-13
 ### Added
 - Added "Remarks" integration field for creating remarks via forms
