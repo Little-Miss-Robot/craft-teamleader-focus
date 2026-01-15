@@ -1,5 +1,21 @@
 # Release Notes for Teamleader
 
+## 5.2.0 - unreleased
+### Added
+- Added "Tags" integration field for Contacts
+- Added "Tags" integration field for Companies
+- Added "Append Tags" option for Contacts to preserve existing tags during updates (uses `contacts.tag` endpoint)
+- Added "Append Tags" option for Companies to preserve existing tags during updates (uses `companies.tag` endpoint)
+- Added "Remarks" integration field for Contacts
+- Added "Remarks" integration field for Companies
+- Added "Summary" integration field for Deals
+
+### Changed
+- Renamed Deals "Extra Information" field to "Summary" with correct API handle
+
+### Fixed
+- Fixed Deals field using incorrect API handle `remarks` instead of `summary`
+
 ## 5.1.1 - 2026-01-15
 ### Fixed
 - Fixed custom fields not being sent in the correct API format (now properly structured as `custom_fields` array)

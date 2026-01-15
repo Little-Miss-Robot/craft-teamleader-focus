@@ -59,6 +59,16 @@
                     ${ error }
                 </li>
             </ul>
+
+            <hr>
+
+            {{ forms.lightswitchField({
+                label: 'Append Tags'|t('formie'),
+                id: 'appendContactTags',
+                name: 'appendContactTags',
+                instructions: "When enabled, submitted tags will be added to the contact's existing tags. When disabled, submitted tags will replace all existing tags."|t('formie'),
+                on: appendContactTags,
+            }) }}
         </div>
 
         <hr>
@@ -96,6 +106,16 @@
                     ${ error }
                 </li>
             </ul>
+
+            <hr>
+
+            {{ forms.lightswitchField({
+                label: 'Append Tags'|t('formie'),
+                id: 'appendCompanyTags',
+                name: 'appendCompanyTags',
+                instructions: "When enabled, submitted tags will be added to the company\'s existing tags. When disabled, submitted tags will replace all existing tags."|t('formie'),
+                on: appendCompanyTags,
+            }) }}
         </div>
 
         <hr>

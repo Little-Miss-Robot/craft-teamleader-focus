@@ -40,10 +40,12 @@ use yii\base\Exception;
  * @author      CraftPulse
  * @package     Teamleader
  * @since       5.0.0
- *
  */
 class TeamleaderFocus extends Crm implements OAuthProviderInterface
 {
+    // Static Methods
+    // =========================================================================
+
     /**
      * @inheritdoc
      */
@@ -52,11 +54,21 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         return Craft::t('formie', 'Teamleader Focus');
     }
 
+    /**
+     * Returns the OAuth provider class for Teamleader Focus authentication.
+     *
+     * @return string
+     */
     public static function getOAuthProviderClass(): string
     {
         return TeamleaderFocusProvider::class;
     }
 
+    /**
+     * Indicates whether this integration supports OAuth connection.
+     *
+     * @return bool
+     */
     public static function supportsOAuthConnection(): bool
     {
         return true;
@@ -66,55 +78,70 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     // =========================================================================
 
     /**
-     * @var bool
+     * @var bool Whether to map form submissions to Teamleader Focus contacts.
      */
     public bool $mapToContacts = false;
 
     /**
-     * @var bool
+     * @var bool Whether to map form submissions to Teamleader Focus companies.
      */
     public bool $mapToCompanies = false;
 
     /**
-     * @var bool
+     * @var bool Whether to map form submissions to Teamleader Focus deals.
      */
     public bool $mapToDeals = false;
 
     /**
-     * @var bool
+     * @var bool Whether to link the contact to the company.
      */
     public bool $linkToCompany = false;
 
     /**
-     * @var string|null
+     * @var string|null The title to use for created deals.
      */
     public ?string $dealTitle = null;
 
     /**
-     * @var string|null
+     * @var string|null The Teamleader user/contact ID after creation or lookup.
      */
     public ?string $userId = null;
 
     /**
-     * @var string|null
+     * @var string|null The Teamleader company ID after creation or lookup.
      */
     public ?string $companyId = null;
 
     /**
-     * @var array|null
+     * @var array|null Field mapping configuration for contacts.
      */
     public ?array $contactsFieldMapping = null;
+
     /**
-     * @var array|null
+     * @var array|null Field mapping configuration for companies.
      */
     public ?array $companiesFieldMapping = null;
+
     /**
-     * @var array|null
+     * @var array|null Field mapping configuration for deals.
      */
     public ?array $dealsFieldMapping = null;
 
+    /**
+     * @var bool Whether to append new tags to existing contact tags instead of replacing them.
+     *           When enabled, makes an additional API call to fetch existing tags before update.
+     */
+    public bool $appendContactTags = false;
+
+    /**
+     * @var bool Whether to append new tags to existing company tags instead of replacing them.
+     *           When enabled, makes an additional API call to fetch existing tags before update.
+     */
+    public bool $appendCompanyTags = false;
+
     // Public Methods
     // =========================================================================
+
     /**
      * @return string
      */
@@ -204,12 +231,18 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             $companyValues = $this->getFieldMappingValues($submission, $this->companiesFieldMapping, 'companies');
             $dealsValues = $this->getFieldMappingValues($submission, $this->dealsFieldMapping, 'deals');
 
+            // Make sure we take the tags from Formie, but unset them, so we don't override them by mistake.
+            $tags = $contactValues['tags'] ?? [];
+            unset($contactValues['tags']);
+
+            $companyTags = $companyValues['tags'] ?? [];
+            unset($companyValues['tags']);
+
             if ($this->mapToContacts) {
                 $contactPayload = $this->_prepPayload($contactValues, 'contacts');
                 $endpoint = 'contacts.add';
 
                 // First check if we already have a user with the primary email address attached.
-
                 $filterPayload = [
                     'filter' => [
                         'email' => [
@@ -223,10 +256,22 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 $currentUser = Collection::make($response['data'])->first();
 
                 // Make sure we send a "contacts.update" request if we have an actual response id.
-                if(!empty($currentUser['id'])) {
+                if (!empty($currentUser['id'])) {
                     $endpoint = 'contacts.update';
                     $contactPayload['id'] = $currentUser['id'];
                     $this->userId = $currentUser['id'];
+                }
+
+                // Handle tags based on endpoint and appendContactTags setting
+                if (!empty($tags)) {
+                    if ($endpoint === 'contacts.add') {
+                        // For new contacts, always include tags in the payload, they're new tags too.
+                        $contactPayload['tags'] = $tags;
+                    } elseif (!$this->appendContactTags) {
+                        // For existing contacts with appendContactTags=false, include in payload to OVERWRITE all tags
+                        // We will use another endpoint (contacts.tag) if it's contact.update - for performance reasons (2 API calls over 3)
+                        $contactPayload['tags'] = $tags;
+                    }
                 }
 
                 $response = $this->deliverPayload($submission, $endpoint, $contactPayload);
@@ -235,7 +280,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                     return true;
                 }
 
-                if($endpoint === 'contacts.add') {
+                if ($endpoint === 'contacts.add') {
                     $this->userId = $response['data']['id'] ?? null;
 
                     if (is_null($this->userId)) {
@@ -255,6 +300,16 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
                         return false;
                     }
+                }
+
+                // This ADDS tags without removing existing ones - no need to fetch existing tags first
+                if ($endpoint === 'contacts.update' && $this->appendContactTags && !empty($tags)) {
+                    $tagPayload = [
+                        'id' => $this->userId,
+                        'tags' => $tags,
+                    ];
+
+                    $this->deliverPayload($submission, 'contacts.tag', $tagPayload);
                 }
             }
 
@@ -285,6 +340,18 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                     }
                 }
 
+                // Handle tags based on endpoint and appendCompanyTags setting
+                if (!empty($companyTags)) {
+                    if ($endpoint === 'companies.add') {
+                        // For new companies, always include tags in the payload, they're new tags too.
+                        $companyPayload['tags'] = $companyTags;
+                    } elseif (!$this->appendCompanyTags) {
+                        // For existing contacts with appendCompanyTags=false, include in payload to OVERWRITE all tags
+                        // We will use another endpoint (companies.tag) if it's companies.update - for performance reasons (2 API calls over 3)
+                        $companyPayload['tags'] = $companyTags;
+                    }
+                }
+
                 $response = $this->deliverPayload($submission, $endpoint, $companyPayload);
 
                 if ($response === false) {
@@ -311,6 +378,16 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
                         return false;
                     }
+                }
+
+                // This ADDS tags without removing existing ones - no need to fetch existing tags first
+                if ($endpoint === 'companies.update' && $this->appendCompanyTags && !empty($companyTags)) {
+                    $tagPayload = [
+                        'id' => $this->companyId,
+                        'tags' => $companyTags,
+                    ];
+
+                    $this->deliverPayload($submission, 'companies.tag', $tagPayload);
                 }
             }
 
@@ -410,6 +487,14 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                         'name' => Craft::t('formie', 'Language'),
                     ]),
                     new IntegrationField([
+                        'handle' => 'remarks',
+                        'name' => Craft::t('formie', 'Remarks (Markdown supported)'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'tags',
+                        'name' => Craft::t('formie', 'Tags'),
+                    ]),
+                    new IntegrationField([
                         'handle' => 'marketing_mails_consent',
                         'name' => Craft::t('formie', 'Marketing Mails Consent'),
                         'type' => 'boolean',
@@ -474,6 +559,14 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                         'name' => Craft::t('formie', 'Language'),
                     ]),
                     new IntegrationField([
+                        'handle' => 'remarks',
+                        'name' => Craft::t('formie', 'Remarks (Markdown supported)'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'tags',
+                        'name' => Craft::t('formie', 'Tags'),
+                    ]),
+                    new IntegrationField([
                         'handle' => 'marketing_mails_consent',
                         'name' => Craft::t('formie', 'Marketing Mails Consent'),
                         'type' => 'boolean',
@@ -496,8 +589,8 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                         'required' => false,
                     ]),
                     new IntegrationField([
-                        'handle' => 'remarks',
-                        'name' => Craft::t('formie', 'Extra Information'),
+                        'handle' => 'summary',
+                        'name' => Craft::t('formie', 'Summary'),
                         'required' => false,
                     ]),
                 ], $this->_getCustomFields($fields));
@@ -508,6 +601,9 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
         return new IntegrationFormSettings($settings);
     }
+
+    // Private Methods
+    // =========================================================================
 
     /**
      * @param string $context
