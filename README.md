@@ -80,44 +80,69 @@ When configuring Teamleader integration in a Formie form, you will see the follo
 
 ### Contact Fields
 
-| Handle | Name | Type | Required |
-|--------|------|------|----------|
-| salutation | Salutation | String | No |
-| first_name | First Name | String | No |
-| last_name | Last Name | String | Yes |
-| email | Email address | String | Yes |
-| mobile_phone | Mobile number | String | No |
-| phone | Phone number | String | No |
-| addressLine1 | Address | String | No |
-| postal_code | Postal Code | String | No |
-| city | City | String | No |
-| country | Country | String | No |
-| language | Language | String | No |
-| marketing_mails_consent | Marketing Mails Consent | Boolean | No |
+| Handle                  | Name                    | Type    | Required |
+|:------------------------|-------------------------|---------|----------|
+| salutation              | Salutation              | String  | No       |
+| first_name              | First Name              | String  | No       |
+| last_name               | Last Name               | String  | Yes      |
+| email                   | Email address           | String  | Yes      |
+| mobile_phone            | Mobile number           | String  | No       |
+| phone                   | Phone number            | String  | No       |
+| addressLine1            | Address                 | String  | No       |
+| postal_code             | Postal Code             | String  | No       |
+| city                    | City                    | String  | No       |
+| country                 | Country                 | String  | No       |
+| language                | Language                | String  | No       |
+| remarks                 | Remarks                 | String  | No       |
+| tags                    | Tags                    | String  | No       |
+| marketing_mails_consent | Marketing Mails Consent | Boolean | No       |
+
+**Custom Fields**: The Teamleader integration supports **custom fields** for Contacts, which are dynamically fetched from your Teamleader configuration.
 
 ### Company Fields
 
-| Handle | Name | Type | Required |
-|--------|------|------|----------|
-| company_name | Company Name | String | Yes |
-| email | Email address | String | Yes |
-| addressLine1 | Address | String | No |
-| postal_code | Postal Code | String | No |
-| city | City | String | No |
-| country | Country | String | No |
-| mobile_phone | Mobile number | String | No |
-| phone | Phone number | String | No |
-| vat_number | VAT Number | String | No |
-| national_identification_number | National Identification Number | String | No |
-| website | Website | String | No |
-| language | Language | String | No |
-| marketing_mails_consent | Marketing Mails Consent | Boolean | No |
+| Handle                         | Name                           | Type    | Required |
+|--------------------------------|--------------------------------|---------|----------|
+| company_name                   | Company Name                   | String  | Yes      |
+| email                          | Email address                  | String  | No       |
+| addressLine1                   | Address                        | String  | No       |
+| postal_code                    | Postal Code                    | String  | No       |
+| city                           | City                           | String  | No       |
+| country                        | Country                        | String  | No       |
+| mobile_phone                   | Mobile number                  | String  | No       |
+| phone                          | Phone number                   | String  | No       |
+| vat_number                     | VAT Number                     | String  | Yes      |
+| national_identification_number | National Identification Number | String  | No       |
+| website                        | Website                        | String  | No       |
+| language                       | Language                       | String  | No       |
+| remarks                        | Remarks                        | String  | No       |
+| tags                           | Tags                           | String  | No       |
+| marketing_mails_consent        | Marketing Mails Consent        | Boolean | No       |
+
+**Custom Fields**: The Teamleader integration supports **custom fields** for Companies, which are dynamically fetched from your Teamleader configuration.
 
 ### Deal Fields
 
-**Custom Fields Only**: The Teamleader integration only supports **custom fields** for Deals, which are dynamically fetched from your Teamleader configuration.
+| Handle          | Name       | Type   | Required |
+|-----------------|------------|--------|----------|
+| title           | Deal Title | String | Yes      |
+| estimated_value | Deal Value | Float  | No       |
+| summary         | Summary    | String | No       |
+
+**Custom Fields**: The Teamleader integration supports **custom fields** for Deals, which are dynamically fetched from your Teamleader configuration.
 
 **Deal Title**: This must be configured in the Form Settings under 'Map to Deals' and is required to create a deal in Teamleader. as it is required for identifying the deal in Teamleader.
+
+---
+
+### Tag Handling Options
+
+When updating existing contacts or companies, you can control how tags are handled:
+
+- **Append Contact Tags** – When enabled, new tags are added to existing contact tags instead of replacing them. This makes an additional API call.
+- **Append Company Tags** – When enabled, new tags are added to existing company tags instead of replacing them. This makes an additional API call.
+
+When disabled (default), tags in the form submission will **overwrite** all existing tags on the contact or company.
 
 ---
 
