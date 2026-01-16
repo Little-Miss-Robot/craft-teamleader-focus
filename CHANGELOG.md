@@ -9,6 +9,7 @@
 - Added "Remarks" integration field for Contacts
 - Added "Remarks" integration field for Companies
 - Added "Summary" integration field for Deals
+- Added `fax` field mapping for both contacts and companies.
 
 ### Changed
 - Renamed Deals "Extra Information" field to "Summary" with correct API handle
@@ -16,6 +17,7 @@
 ### Fixed
 - Fixed Deals field using incorrect API handle `remarks` instead of `summary`
 - Fixed `linkToCompany` toggle having no effect - contacts are now properly linked to companies via the `contacts.linkToCompany` API endpoint when both entities exist and the setting is enabled.
+- Removed `mobile_phone` field from companies mapping - Teamleader Focus API only supports `phone` and `fax` for companies.
 
 ## 5.1.1 - 2026-01-15
 ### Fixed

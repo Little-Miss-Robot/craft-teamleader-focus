@@ -475,6 +475,10 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                         'handle' => 'phone',
                         'name' => Craft::t('formie', 'Phone number'),
                     ]),
+                    new IntegrationField([
+                        'handle' => 'fax',
+                        'name' => Craft::t('formie', 'Fax'),
+                    ]),
                     // @TODO - build support for repeater fields, since Teamleader Focus supports multiple addresses in an array
                     new IntegrationField([
                         'handle' => 'addressLine1',
@@ -544,12 +548,12 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                         'name' => Craft::t('formie', 'Country'),
                     ]),
                     new IntegrationField([
-                        'handle' => 'mobile_phone',
-                        'name' => Craft::t('formie', 'Mobile number'),
-                    ]),
-                    new IntegrationField([
                         'handle' => 'phone',
                         'name' => Craft::t('formie', 'Phone number'),
+                    ]),
+                    new IntegrationField([
+                        'handle' => 'fax',
+                        'name' => Craft::t('formie', 'Fax'),
                     ]),
                     new IntegrationField([
                         'handle' => 'vat_number',
@@ -703,6 +707,16 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             $payload['custom_fields'] = $customFields;
         }
 
+        if ($context === 'contacts') {
+            if (isset($payload['mobile_phone'])) {
+                $payload['telephones'][] = [
+                    'type' => 'mobile',
+                    'number' => $payload['mobile_phone'],
+                ];
+                unset($payload['mobile_phone']);
+            }
+        }
+
         if (in_array($context, ['contacts', 'companies'])) {
             if(isset($payload['email'])) {
                 $payload['emails'][] = [
@@ -720,12 +734,12 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 unset($payload['phone']);
             }
 
-            if(isset($payload['mobile_phone'])) {
+            if (isset($payload['fax'])) {
                 $payload['telephones'][] = [
-                    'type' => 'mobile',
-                    'number' => $payload['mobile_phone'],
+                    'type' => 'fax',
+                    'number' => $payload['fax'],
                 ];
-                unset($payload['mobile_phone']);
+                unset($payload['fax']);
             }
 
             $addressSource = $payload['address'] ?? (isset($payload['addressLine1']) ? $payload : null);
