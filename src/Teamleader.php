@@ -13,6 +13,7 @@ namespace craftpulse\teamleader;
 use Craft;
 use craft\base\Plugin;
 
+use craftpulse\teamleader\fields\formie\ClientType;
 use craftpulse\teamleader\integrations\formie\TeamleaderFocus;
 
 use verbb\formie\events\RegisterFieldsEvent;
@@ -54,6 +55,7 @@ class Teamleader extends Plugin {
 
     // Public Methods
     // =========================================================================
+
     public function init(): void {
         parent::init();
         self::$plugin = $this;
@@ -71,12 +73,22 @@ class Teamleader extends Plugin {
 
     // Private Methods
     // =========================================================================
+
     private function _registerFormieEventHandlers(): void {
         Event::on(
             Integrations::class,
             Integrations::EVENT_REGISTER_INTEGRATIONS,
             function (RegisterIntegrationsEvent $event) {
                 $event->crm[] = TeamleaderFocus::class;
+            }
+        );
+
+        // Register our custom Formie fields
+        Event::on(
+            Fields::class,
+            Fields::EVENT_REGISTER_FIELDS,
+            function (RegisterFieldsEvent $event) {
+                $event->fields[] = ClientType::class;
             }
         );
     }

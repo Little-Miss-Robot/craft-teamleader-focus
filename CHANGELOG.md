@@ -13,6 +13,11 @@
 - Added `currency` field mapping for deals - allows mapping currency from a form field.
 - Added `Default Currency` setting for deals - configurable fallback when currency is not mapped from a form field.
 - Added `CurrencyHelper` class for formatting currency options from Teamleader Focus API.
+- Added `Client Type` custom Formie field for B2B/B2C workflow differentiation.
+- B2B (Company) requests create contact + company + deal with linking.
+- B2C (Client) requests create contact + deal only, skipping company creation.
+- Field displays as radio buttons with configurable labels and default value.
+- Added `ClientTypeHelper` for detecting client type from form submissions.
 
 ### Changed
 - Renamed Deals "Extra Information" field to "Summary" with correct API handle

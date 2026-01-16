@@ -15,6 +15,7 @@ use craft\helpers\App;
 use craft\helpers\Json;
 
 use craftpulse\teamleader\auth\providers\TeamleaderFocus as TeamleaderFocusProvider;
+use craftpulse\teamleader\helpers\ClientTypeHelper;
 use craftpulse\teamleader\helpers\CurrencyHelper;
 use craftpulse\teamleader\helpers\VatHelper;
 
@@ -238,8 +239,12 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     public function sendPayload(Submission $submission): bool
     {
         try {
+            $isCompanyRequest = ClientTypeHelper::isCompanyRequest($submission);
+
             $contactValues = $this->getFieldMappingValues($submission, $this->contactsFieldMapping, 'contacts');
-            $companyValues = $this->getFieldMappingValues($submission, $this->companiesFieldMapping, 'companies');
+            $companyValues = $isCompanyRequest
+                ? $this->getFieldMappingValues($submission, $this->companiesFieldMapping, 'companies')
+                : [];
             $dealsValues = $this->getFieldMappingValues($submission, $this->dealsFieldMapping, 'deals');
 
             // Make sure we take the tags from Formie, but unset them, so we don't override them by mistake.
@@ -324,7 +329,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 }
             }
 
-            if ($this->mapToCompanies) {
+            if ($this->mapToCompanies && $isCompanyRequest && !empty($companyValues)) {
                 $companyPayload = $this->_prepPayload($companyValues, 'companies');
                 $endpoint = 'companies.add';
 
@@ -403,7 +408,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             }
 
             // Link contact to company if enabled and both IDs exist
-            if ($this->linkToCompany && $this->userId && $this->companyId) {
+            if ($this->linkToCompany && $this->userId && $this->companyId && $isCompanyRequest) {
                 $linkPayload = [
                     'id' => $this->userId,
                     'company_id' => $this->companyId,
