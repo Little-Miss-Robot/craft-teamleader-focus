@@ -15,6 +15,7 @@
 
 ### Fixed
 - Fixed Deals field using incorrect API handle `remarks` instead of `summary`
+- Fixed `linkToCompany` toggle having no effect - contacts are now properly linked to companies via the `contacts.linkToCompany` API endpoint when both entities exist and the setting is enabled.
 
 ## 5.1.1 - 2026-01-15
 ### Fixed

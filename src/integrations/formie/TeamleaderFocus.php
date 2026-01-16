@@ -391,6 +391,16 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 }
             }
 
+            // Link contact to company if enabled and both IDs exist
+            if ($this->linkToCompany && $this->userId && $this->companyId) {
+                $linkPayload = [
+                    'id' => $this->userId,
+                    'company_id' => $this->companyId,
+                ];
+
+                $this->deliverPayload($submission, 'contacts.linkToCompany', $linkPayload);
+            }
+
             if ($this->mapToDeals && ($this->userId || $this->companyId)) {
 
                 $options = [
