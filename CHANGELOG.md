@@ -10,6 +10,9 @@
 - Added "Remarks" integration field for Companies
 - Added "Summary" integration field for Deals
 - Added `fax` field mapping for both contacts and companies.
+- Added `currency` field mapping for deals - allows mapping currency from a form field.
+- Added `Default Currency` setting for deals - configurable fallback when currency is not mapped from a form field.
+- Added `CurrencyHelper` class for formatting currency options from Teamleader Focus API.
 
 ### Changed
 - Renamed Deals "Extra Information" field to "Summary" with correct API handle

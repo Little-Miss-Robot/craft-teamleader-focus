@@ -15,6 +15,7 @@ use craft\helpers\App;
 use craft\helpers\Json;
 
 use craftpulse\teamleader\auth\providers\TeamleaderFocus as TeamleaderFocusProvider;
+use craftpulse\teamleader\helpers\CurrencyHelper;
 use craftpulse\teamleader\helpers\VatHelper;
 
 use Illuminate\Support\Collection;
@@ -78,6 +79,11 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     // =========================================================================
 
     /**
+     * @var bool Whether to link the contact to the company.
+     */
+    public bool $linkToCompany = false;
+
+    /**
      * @var bool Whether to map form submissions to Teamleader Focus contacts.
      */
     public bool $mapToContacts = false;
@@ -93,14 +99,14 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     public bool $mapToDeals = false;
 
     /**
-     * @var bool Whether to link the contact to the company.
+     * @var string|null The Teamleader company ID after creation or lookup.
      */
-    public bool $linkToCompany = false;
+    public ?string $companyId = null;
 
     /**
-     * @var string|null The title to use for created deals.
+     * @var string|null The Teamleader deal ID after creation.
      */
-    public ?string $dealTitle = null;
+    public ?string $dealId = null;
 
     /**
      * @var string|null The Teamleader user/contact ID after creation or lookup.
@@ -108,9 +114,14 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     public ?string $userId = null;
 
     /**
-     * @var string|null The Teamleader company ID after creation or lookup.
+     * @var string The default currency for deals when not mapped from a form field.
      */
-    public ?string $companyId = null;
+    public string $defaultCurrency = 'EUR';
+
+    /**
+     * @var string|null The title to use for created deals.
+     */
+    public ?string $dealTitle = null;
 
     /**
      * @var array|null Field mapping configuration for contacts.
@@ -607,6 +618,10 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                         'name' => Craft::t('formie', 'Summary'),
                         'required' => false,
                     ]),
+                    new IntegrationField([
+                        'handle' => 'currency',
+                        'name' => Craft::t('formie', 'Currency'),
+                    ]),
                 ], $this->_getCustomFields($fields));
             }
         } catch (Exception $error) {
@@ -614,6 +629,24 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         }
 
         return new IntegrationFormSettings($settings);
+    }
+
+    /**
+     * Fetch currency options from Teamleader Focus API.
+     *
+     * @return array
+     */
+    public function getCurrencyOptions(): array
+    {
+        try {
+            $response = $this->request('POST', 'currencies.exchangeRates', [
+                'json' => ['base' => 'EUR']
+            ]);
+
+            return CurrencyHelper::formatCurrencyOptions($response['data'] ?? []);
+        } catch (Throwable $e) {
+            return CurrencyHelper::getDefaultCurrencies();
+        }
     }
 
     // Private Methods
@@ -769,10 +802,13 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 $payload['lead']['contact_person_id'] = $this->userId;
             }
 
-            if(isset($payload['estimated_value'])) {
+            if (isset($payload['estimated_value'])) {
+                $currency = $payload['currency'] ?? $this->defaultCurrency;
+                unset($payload['currency']);
+
                 $payload['estimated_value'] = [
                     'amount' => $payload['estimated_value'],
-                    'currency' => 'EUR',
+                    'currency' => $currency,
                 ];
             }
 

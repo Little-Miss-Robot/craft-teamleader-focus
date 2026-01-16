@@ -10,13 +10,16 @@
 {% set mapToDeals = form.settings.integrations[handle].mapToDeals ?? '' %}
 {% set linkToCompany = form.settings.integrations[handle].linkToCompany ?? '' %}
 {% set dealTitle = form.settings.integrations[handle].dealTitle ?? '' %}
+{% set appendContactTags = form.settings.integrations[handle].appendContactTags ?? false %}
+{% set appendCompanyTags = form.settings.integrations[handle].appendCompanyTags ?? false %}
+{% set defaultCurrency = form.settings.integrations[handle].defaultCurrency ?? 'EUR' %}
 
 <field-select
     label="{{ 'Opt-In Field'|t('formie') }}"
-    instructions="{{ 'Choose a field to opt-in to {name}. For example, you might only wish to record user data if they provide a value for a field of your choice - commonly, an Agree field.' | t('formie', { name: displayName }) }}"
+    instructions="{{ 'Choose a field to opt-in to {name}. For example, you might only wish to record user data if they provide a value for a field of your choice - commonly, an Agree field.'|t('formie', { name: displayName }) }}"
     id="opt-in-field"
     name="optInField"
-    :value="get(form, 'settings.integrations.{{ handle }}.optInField')"
+    :value="get(form, 'settings.integrations.{{- handle -}}.optInField')"
 ></field-select>
 
 <hr>
@@ -25,7 +28,7 @@
     <template v-slot="{ get, isEmpty, input, settings, sourceId, loading, refresh, error, errorMessage, getSourceFields }">
         <div class="field">
             <button class="btn" :class="{ 'fui-loading fui-loading-sm': loading }" data-icon="refresh" @click.prevent="refresh">
-                {{ 'Refresh Integration' | t('formie') }}
+                {{ 'Refresh Integration'|t('formie') }}
             </button>
         </div>
 
@@ -36,7 +39,7 @@
 
         {{ forms.lightswitchField({
             label: 'Map to Contacts'|t('formie'),
-            instructions: 'Whether to map form data to {name} {label}.' | t('formie', { name: displayName, label: 'Contacts' }),
+            instructions: 'Whether to map form data to {name} {label}.'|t('formie', { name: displayName, label: 'Contacts' }),
             id: 'mapToContacts',
             name: 'mapToContacts',
             on: mapToContacts,
@@ -46,7 +49,7 @@
         <div id="map-to-contacts" class="{{ not mapToContacts ? 'hidden' }}">
             <integration-field-mapping
                 label="{{ 'Contacts Field Mapping' | t('formie') }}"
-                instructions="{{ 'Choose how your form fields should map to your {name} {label} fields.' | t('formie', { name: displayName, label: 'Contacts' }) }}"
+                instructions="{{ 'Choose how your form fields should map to your {name} {label} fields.'|t('formie', { name: displayName, label: 'Contacts' }) }}"
                 name-label="{{ integration.displayName() }}"
                 id="contacts-field-mapping"
                 name="contactsFieldMapping"
@@ -75,7 +78,7 @@
 
         {{ forms.lightswitchField({
             label: 'Map to Companies'|t('formie'),
-            instructions: 'Whether to map form data to {name} {label}.' | t('formie', { name: displayName, label: 'Companies' }),
+            instructions: 'Whether to map form data to {name} {label}.'|t('formie', { name: displayName, label: 'Companies' }),
             id: 'mapToCompanies',
             name: 'mapToCompanies',
             on: mapToCompanies,
@@ -85,7 +88,7 @@
         <div id="map-to-companies" class="{{ not mapToCompanies ? 'hidden' }}">
             {{ forms.lightswitchField({
                 label: 'Link user to company'|t('formie'),
-                instructions: 'Whether the user should be linked to the created company.' | t('formie', { name: displayName }),
+                instructions: 'Whether the user should be linked to the created company.'|t('formie', { name: displayName }),
                 id: 'linkToCompany',
                 name: 'linkToCompany',
                 on: linkToCompany,
@@ -93,7 +96,7 @@
 
             <integration-field-mapping
                 label="{{ 'Companies Field Mapping' | t('formie') }}"
-                instructions="{{ 'Choose how your form fields should map to your {name} {label} fields.' | t('formie', { name: displayName, label: 'Contacts' }) }}"
+                instructions="{{ 'Choose how your form fields should map to your {name} {label} fields.'|t('formie', { name: displayName, label: 'Contacts' }) }}"
                 name-label="{{ integration.displayName() }}"
                 id="companies-field-mapping"
                 name="companiesFieldMapping"
@@ -122,7 +125,7 @@
 
         {{ forms.lightswitchField({
             label: 'Map to Deals' | t('formie'),
-            instructions: 'Whether to map form data to {name} {label}.' | t('formie', { name: displayName, label: 'Deals' }),
+            instructions: 'Whether to map form data to {name} {label}.'|t('formie', { name: displayName, label: 'Deals' }),
             id: 'mapToDeals',
             name: 'mapToDeals',
             on: mapToDeals,
@@ -133,15 +136,24 @@
 
             {{ forms.textField({
                 label: 'Deal Title' | t('formie'),
-                instructions: 'Enter a title to use for the created deal.' | t('formie'),
+                instructions: 'Enter a title to use for the created deal.'|t('formie'),
                 name: 'dealTitle',
                 required: true,
                 value: dealTitle,
             }) }}
 
+            {{ forms.selectField({
+                label: 'Default Currency'|t('formie'),
+                instructions: 'The default currency for deal values when not mapped from a form field.'|t('formie'),
+                id: 'defaultCurrency',
+                name: 'defaultCurrency',
+                value: defaultCurrency ?? 'EUR',
+                options: integration.getCurrencyOptions(),
+            }) }}
+
             <integration-field-mapping
                 label="{{ 'Deals Field Mapping' | t('formie') }}"
-                instructions="{{ 'Choose how your form fields should map to your {name} {label} fields.' | t('formie', { name: displayName, label: 'Deals' }) }}"
+                instructions="{{ 'Choose how your form fields should map to your {name} {label} fields.'|t('formie', { name: displayName, label: 'Deals' }) }}"
                 name-label="{{ integration.displayName() }}"
                 id="deals-field-mapping"
                 name="dealsFieldMapping"
