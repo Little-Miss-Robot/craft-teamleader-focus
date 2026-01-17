@@ -1,6 +1,6 @@
 # Release Notes for Teamleader
 
-## 5.2.0 - unreleased
+## 5.2.0 - 2026-01-18
 ### Added
 - Added "Tags" integration field for Contacts
 - Added "Tags" integration field for Companies
