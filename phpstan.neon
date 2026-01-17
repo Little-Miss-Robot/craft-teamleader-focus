@@ -2,8 +2,10 @@ includes:
     - %currentWorkingDirectory%/vendor/craftcms/phpstan/phpstan.neon
 
 parameters:
-    level: 6
+    level: 5
     paths:
         - src
     scanDirectories:
         - vendor/verbb/formie/src
+        - vendor/craftcms/cms/src
+
