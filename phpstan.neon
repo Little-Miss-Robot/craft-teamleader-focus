@@ -7,5 +7,5 @@ parameters:
         - src
     ignoreErrors:
         -
-            identifier: class.implementsInterface
+            identifier: class.missingExtends
             path: src/fields/formie/ClientType.php
