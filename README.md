@@ -61,6 +61,28 @@ Seamlessly integrate **Teamleader Focus** with **Craft CMS** and **Formie forms*
 
 ---
 
+## Custom Formie Fields
+
+The Teamleader Focus plugin provides custom Formie fields to enhance your forms:
+
+### Client Type Field
+
+The **Client Type** field allows you to differentiate between B2B (Business-to-Business) and B2C (Business-to-Consumer) submissions. This controls the backend logic for creating records in Teamleader Focus.
+
+**How it works:**
+- **Company (B2B)**: Creates a contact, company, and deal. The contact is automatically linked to the company.
+- **Client (B2C)**: Creates only a contact and deal, skipping company creation entirely.
+
+**Field Settings:**
+- **Default Value**: Choose whether "Company" or "Client" is selected by default.
+- **Company Label**: Customize the label for the B2B option (default: "Company").
+- **Client Label**: Customize the label for the B2C option (default: "Client").
+- **Layout**: Display radio buttons vertically or horizontally.
+
+This field is always required and works seamlessly with Formie's built-in **Conditions** feature to show/hide company-related fields based on the selected value.
+
+---
+
 ## Mapping Form Fields to Teamleader Focus
 
 ### Mapping Options in Form Settings
@@ -71,31 +93,33 @@ When configuring Teamleader integration in a Formie form, you will see the follo
 - **Map to Companies** – Enables mapping of Formie fields to Teamleader companies.
 - **Map to Deals** – Enables mapping of Formie fields to Teamleader deals.
 - **Link user to company** – Ensures contacts are linked to a company in Teamleader when enabled.
+- **Default Currency** – Select the default currency for deal values (dynamically fetched from Teamleader).
 
 ### Important Mapping Notes
 
-⚠️ **Name Field Configuration**: Formie’s **Name** field should be configured as **separate fields** (Suffix, First Name, Last Name) to ensure proper mapping to Teamleader.
+⚠️ **Name Field Configuration**: Formie's **Name** field should be configured as **separate fields** (Suffix, First Name, Last Name) to ensure proper mapping to Teamleader.
 
 ⚠️ **Address Mapping Requirement**: Teamleader **requires a full address** (`addressLine1`, `postal_code`, `city`, `country`). If any of these fields are missing, **the address data will NOT appear** in Teamleader.
 
 ### Contact Fields
 
-| Handle                  | Name                    | Type    | Required |
-|:------------------------|-------------------------|---------|----------|
-| salutation              | Salutation              | String  | No       |
-| first_name              | First Name              | String  | No       |
-| last_name               | Last Name               | String  | Yes      |
-| email                   | Email address           | String  | Yes      |
-| mobile_phone            | Mobile number           | String  | No       |
-| phone                   | Phone number            | String  | No       |
-| addressLine1            | Address                 | String  | No       |
-| postal_code             | Postal Code             | String  | No       |
-| city                    | City                    | String  | No       |
-| country                 | Country                 | String  | No       |
-| language                | Language                | String  | No       |
-| remarks                 | Remarks                 | String  | No       |
-| tags                    | Tags                    | String  | No       |
-| marketing_mails_consent | Marketing Mails Consent | Boolean | No       |
+| Handle                  | Name                         | Type    | Required |
+|:------------------------|------------------------------|---------|----------|
+| salutation              | Salutation                   | String  | No       |
+| first_name              | First Name                   | String  | No       |
+| last_name               | Last Name                    | String  | Yes      |
+| email                   | Email address                | String  | Yes      |
+| mobile_phone            | Mobile number                | String  | No       |
+| phone                   | Phone number                 | String  | No       |
+| fax                     | Fax number                   | String  | No       |
+| addressLine1            | Address                      | String  | No       |
+| postal_code             | Postal Code                  | String  | No       |
+| city                    | City                         | String  | No       |
+| country                 | Country                      | String  | No       |
+| language                | Language                     | String  | No       |
+| remarks                 | Remarks (Markdown supported) | String  | No       |
+| tags                    | Tags                         | String  | No       |
+| marketing_mails_consent | Marketing Mails Consent      | Boolean | No       |
 
 **Custom Fields**: The Teamleader integration supports **custom fields** for Contacts, which are dynamically fetched from your Teamleader configuration.
 
@@ -109,17 +133,19 @@ When configuring Teamleader integration in a Formie form, you will see the follo
 | postal_code                    | Postal Code                    | String  | No       |
 | city                           | City                           | String  | No       |
 | country                        | Country                        | String  | No       |
-| mobile_phone                   | Mobile number                  | String  | No       |
 | phone                          | Phone number                   | String  | No       |
+| fax                            | Fax number                     | String  | No       |
 | vat_number                     | VAT Number                     | String  | Yes      |
 | national_identification_number | National Identification Number | String  | No       |
 | website                        | Website                        | String  | No       |
 | language                       | Language                       | String  | No       |
-| remarks                        | Remarks                        | String  | No       |
+| remarks                        | Remarks (Markdown supported)   | String  | No       |
 | tags                           | Tags                           | String  | No       |
 | marketing_mails_consent        | Marketing Mails Consent        | Boolean | No       |
 
 **Custom Fields**: The Teamleader integration supports **custom fields** for Companies, which are dynamically fetched from your Teamleader configuration.
+
+**Note**: Companies do not support `mobile_phone` in the Teamleader API. Use `phone` or `fax` instead.
 
 ### Deal Fields
 
@@ -127,11 +153,14 @@ When configuring Teamleader integration in a Formie form, you will see the follo
 |-----------------|------------|--------|----------|
 | title           | Deal Title | String | Yes      |
 | estimated_value | Deal Value | Float  | No       |
+| currency        | Currency   | String | No       |
 | summary         | Summary    | String | No       |
 
 **Custom Fields**: The Teamleader integration supports **custom fields** for Deals, which are dynamically fetched from your Teamleader configuration.
 
-**Deal Title**: This must be configured in the Form Settings under 'Map to Deals' and is required to create a deal in Teamleader. as it is required for identifying the deal in Teamleader.
+**Deal Title**: This must be configured in the Form Settings under 'Map to Deals' and is required to create a deal in Teamleader.
+
+**Currency**: Can be mapped from a form field or falls back to the **Default Currency** setting. Currencies are dynamically fetched from Teamleader's exchange rates API.
 
 ---
 
@@ -146,6 +175,27 @@ When disabled (default), tags in the form submission will **overwrite** all exis
 
 ---
 
+## B2B vs B2C Workflow
+
+The plugin supports different workflows based on the type of submission:
+
+### B2B (Business-to-Business)
+When the **Client Type** field is set to "Company":
+1. A **contact** is created or updated
+2. A **company** is created or updated
+3. The contact is **linked to the company** (if "Link user to company" is enabled)
+4. A **deal** is created and associated with the company
+
+### B2C (Business-to-Consumer)
+When the **Client Type** field is set to "Client":
+1. A **contact** is created or updated
+2. Company creation is **skipped entirely**
+3. A **deal** is created and associated with the contact
+
+This allows you to use a single form for both business and individual customers, with the appropriate records created in Teamleader Focus.
+
+---
+
 ## Syncing Data with Teamleader Focus
 
 - When a user submits a Formie form, **Teamleader Focus** will create contacts, companies, or deals based on the mapped fields.
@@ -157,6 +207,8 @@ When disabled (default), tags in the form submission will **overwrite** all exis
 
 - **Authentication Issues**: Ensure your **API credentials** are correct.
 - **Data Not Syncing**: Double-check your **field mappings** in Formie.
+- **Mobile Phone Not Appearing on Companies**: The Teamleader API only supports `phone` and `fax` for companies, not `mobile_phone`.
+- **Currency Not Applied**: Ensure the currency code matches Teamleader's supported currencies (e.g., "EUR", "USD", "GBP").
 
 ---
 
