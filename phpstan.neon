@@ -5,7 +5,7 @@ parameters:
     level: 5
     paths:
         - src
-    scanDirectories:
-        - vendor/verbb/formie/src
-        - vendor/craftcms/cms/src
-
+    ignoreErrors:
+        -
+            identifier: class.implementsInterface
+            path: src/fields/formie/ClientType.php
