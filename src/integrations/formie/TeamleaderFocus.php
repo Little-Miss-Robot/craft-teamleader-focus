@@ -870,7 +870,19 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             return null;
         }
 
-        $countries = Collection::make(Craft::$app->getAddresses()->getCountryList())->flip();
+        // Get the country list from Craft, with ISO code as key.
+        $countriesISOList = Collection::make(Craft::$app->getAddresses()->getCountryList());
+
+        // Check if length of fields['country'] is 2, use country code as is.
+        // Otherwise, use the country code from the standardized list.
+        $country = strlen($fields['country']) === 2 && $countriesISOList->get($fields['country']) ? $fields['country'] : $countriesISOList->flip()->get($fields['country']);
+
+        // If country is not found, return error.
+        if (!$country) {
+            Integration::error($this, Craft::t('formie', 'Missing country code {country}. Sent payload {payload}', [ 'country' => $fields['country'], 'payload' => Json::encode($fields) ]), true);
+
+            return null;
+        }
 
         return [
             'type' => 'primary',
@@ -878,7 +890,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 'line_1' => $fields['addressLine1'],
                 'postal_code' => $fields['postal_code'],
                 'city' => $fields['city'],
-                'country' => $countries->get($fields['country']),
+                'country' => $country,
             ]
         ];
     }
