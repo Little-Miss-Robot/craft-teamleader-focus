@@ -36,10 +36,7 @@ class Teamleader extends Plugin {
 
     // Static Properties
     // =========================================================================
-    /**
-     * @var ?Teamleader
-     */
-    public static ?Teamleader $plugin = null;
+
     /**
      * @var string
      */
@@ -58,7 +55,6 @@ class Teamleader extends Plugin {
 
     public function init(): void {
         parent::init();
-        self::$plugin = $this;
 
         $request = Craft::$app->getRequest();
         if ($request->getIsConsoleRequest()) {
