@@ -85,7 +85,7 @@ class TeamleaderFocus extends AbstractProvider
     {
         if (!in_array($response->getStatusCode(), [200, 201, 204], true)) {
             throw new IdentityProviderException(
-                '',
+                'Teamleader API error: ' . $response->getStatusCode(),
                 $response->getStatusCode(),
                 $response->getBody()->getContents()
             );
