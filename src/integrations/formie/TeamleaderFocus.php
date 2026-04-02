@@ -248,10 +248,10 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             $dealsValues = $this->getFieldMappingValues($submission, $this->dealsFieldMapping, 'deals');
 
             // Make sure we take the tags from Formie, but unset them, so we don't override them by mistake.
-            $tags = $contactValues['tags'] ?? [];
+            $tags = $this->_normalizeTagsValue($contactValues['tags'] ?? []);
             unset($contactValues['tags']);
 
-            $companyTags = $companyValues['tags'] ?? [];
+            $companyTags = $this->_normalizeTagsValue($companyValues['tags'] ?? []);
             unset($companyValues['tags']);
 
             if ($this->mapToContacts) {
@@ -657,6 +657,30 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     // Private Methods
     // =========================================================================
 
+    /**
+     * Normalize tags from Formie: process arrays and single comma-separated strings.
+     *
+     * @return array<int, mixed>
+     */
+    private function _normalizeTagsValue(mixed $value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            $parts = array_map(trim(...), explode(',', $value));
+
+            return array_values(array_filter($parts, fn(string $s) => $s !== ''));
+        }
+
+        return [];
+    }
+    
     /**
      * @param string $context
      * @return array
