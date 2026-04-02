@@ -664,7 +664,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         }
 
         if (is_array($value)) {
-            return $value;
+            return array_values(array_filter($value, fn(mixed $item) => $item !== null && $item !== ''));
         }
 
         if (is_string($value)) {
