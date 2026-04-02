@@ -24,8 +24,8 @@ class TeamleaderFocus extends AbstractProvider
 {
     use BearerAuthorizationTrait;
 
-    const OAUTH_BASE_URL = 'https://focus.teamleader.eu/oauth2/';
-    const API_BASE_URL = 'https://api.focus.teamleader.eu/';
+    private const OAUTH_BASE_URL = 'https://focus.teamleader.eu/oauth2/';
+    private const API_BASE_URL = 'https://api.focus.teamleader.eu/';
 
     public function __construct(array $options = [], array $collaborators = [])
     {
