@@ -248,10 +248,10 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             $dealsValues = $this->getFieldMappingValues($submission, $this->dealsFieldMapping, 'deals');
 
             // Make sure we take the tags from Formie, but unset them, so we don't override them by mistake.
-            $tags = $contactValues['tags'] ?? [];
+            $tags = $this->_normalizeTagsValue($contactValues['tags'] ?? []);
             unset($contactValues['tags']);
 
-            $companyTags = $companyValues['tags'] ?? [];
+            $companyTags = $this->_normalizeTagsValue($companyValues['tags'] ?? []);
             unset($companyValues['tags']);
 
             if ($this->mapToContacts) {
@@ -658,6 +658,30 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     // =========================================================================
 
     /**
+     * Normalize tags from Formie: process arrays and single comma-separated strings.
+     *
+     * @return array<int, mixed>
+     */
+    private function _normalizeTagsValue(mixed $value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            $parts = array_map(trim(...), explode(',', $value));
+
+            return array_values(array_filter($parts, fn(string $s) => $s !== ''));
+        }
+
+        return [];
+    }
+    
+    /**
      * @param string $context
      * @return array
      */
@@ -870,7 +894,19 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             return null;
         }
 
-        $countries = Collection::make(Craft::$app->getAddresses()->getCountryList())->flip();
+        // Get the country list from Craft, with ISO code as key.
+        $countriesISOList = Collection::make(Craft::$app->getAddresses()->getCountryList());
+
+        // Check if length of fields['country'] is 2, use country code as is.
+        // Otherwise, use the country code from the standardized list.
+        $country = strlen($fields['country']) === 2 && $countriesISOList->get($fields['country']) ? $fields['country'] : $countriesISOList->flip()->get($fields['country']);
+
+        // If country is not found, return error.
+        if (!$country) {
+            Integration::error($this, Craft::t('formie', 'Missing country code {country}. Sent payload {payload}', [ 'country' => $fields['country'], 'payload' => Json::encode($fields) ]), true);
+
+            return null;
+        }
 
         return [
             'type' => 'primary',
@@ -878,7 +914,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 'line_1' => $fields['addressLine1'],
                 'postal_code' => $fields['postal_code'],
                 'city' => $fields['city'],
-                'country' => $countries->get($fields['country']),
+                'country' => $country,
             ]
         ];
     }
