@@ -1,5 +1,12 @@
 # Release Notes for Teamleader
 
+# Release Notes for Teamleader
+
+## 5.2.1 - 2026-04-02
+### Fixed
+- Fixed country field only accepting labels (e.g., "Belgium") — now also accepts ISO codes (e.g., "BE") from prefilled dropdowns, with case-insensitive matching. ([#8](https://github.com/craftpulse/craft-teamleader-focus/issues/8)) - Thanks [@ishetnogferre](https://github.com/ishetnogferre)
+- Fixed tags field only accepting arrays — now also normalizes comma-, semicolon-, and pipe-separated strings from hidden fields. ([#10](https://github.com/craftpulse/craft-teamleader-focus/issues/10)) - Thanks [@ishetnogferre](https://github.com/ishetnogferre)
+
 ## 5.2.0 - 2026-01-18
 ### Added
 - Added "Tags" integration field for Contacts

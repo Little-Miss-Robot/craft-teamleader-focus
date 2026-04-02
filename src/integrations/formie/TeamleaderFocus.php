@@ -660,7 +660,8 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     /**
      * Normalize tags from Formie: process arrays and single comma-separated strings.
      *
-     * @return array<int, mixed>
+     * @param mixed $value
+     * @return array<int, string>
      */
     private function _normalizeTagsValue(mixed $value): array
     {
@@ -673,7 +674,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         }
 
         if (is_string($value)) {
-            $parts = array_map(trim(...), explode(',', $value));
+            $parts = array_map(trim(...), preg_split('/[,;|]/', $value));
 
             return array_values(array_filter($parts, fn(string $s) => $s !== ''));
         }
@@ -894,12 +895,13 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             return null;
         }
 
-        // Get the country list from Craft, with ISO code as key.
         $countriesISOList = Collection::make(Craft::$app->getAddresses()->getCountryList());
+        $upperValue = strtoupper($fields['country']);
 
-        // Check if length of fields['country'] is 2, use country code as is.
-        // Otherwise, use the country code from the standardized list.
-        $country = strlen($fields['country']) === 2 && $countriesISOList->get($fields['country']) ? $fields['country'] : $countriesISOList->flip()->get($fields['country']);
+        // If the value is already a valid ISO code, use it directly. Otherwise, look it up by label.
+        $country = $countriesISOList->has($upperValue)
+            ? $upperValue
+            : $countriesISOList->flip()->get($fields['country']);
 
         // If country is not found, return error.
         if (!$country) {
