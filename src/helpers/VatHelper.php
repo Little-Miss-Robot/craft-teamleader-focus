@@ -2,39 +2,97 @@
 
 namespace craftpulse\teamleader\helpers;
 
+/**
+ * Class VatHelper
+ *
+ * Normalizes and validates EU VAT numbers for use with the Teamleader Focus API.
+ * The API stores and expects raw alphanumeric format (e.g. "BE0899623035").
+ *
+ * @author      CraftPulse
+ * @package     Teamleader
+ * @since       5.1.0
+ */
 class VatHelper
 {
     /**
-     * @param string $vatNumber
-     * @return string|false
+     * EU VAT body patterns per country code (after the 2-letter prefix).
+     *
+     * @see https://ec.europa.eu/taxation_customs/vies/faq.html
+     * @var array<string, string>
+     */
+    private const VAT_PATTERNS = [
+        'AT' => '/^U\d{8}$/',
+        'BE' => '/^[01]\d{9}$/',
+        'BG' => '/^\d{9,10}$/',
+        'HR' => '/^\d{11}$/',
+        'CY' => '/^\d{8}[A-Z]$/',
+        'CZ' => '/^\d{8,10}$/',
+        'DK' => '/^\d{8}$/',
+        'EE' => '/^\d{9}$/',
+        'FI' => '/^\d{8}$/',
+        'FR' => '/^[0-9A-Z]{2}\d{9}$/',
+        'DE' => '/^\d{9}$/',
+        'EL' => '/^\d{9}$/',
+        'GR' => '/^\d{9}$/',
+        'HU' => '/^\d{8}$/',
+        'IE' => '/^(\d[A-Z0-9+*]\d{5}[A-Z]|\d{7}[A-Z]{1,2})$/',
+        'IT' => '/^\d{11}$/',
+        'LV' => '/^\d{11}$/',
+        'LT' => '/^(\d{9}|\d{12})$/',
+        'LU' => '/^\d{8}$/',
+        'MT' => '/^\d{8}$/',
+        'NL' => '/^\d{9}B\d{2}$/',
+        'PL' => '/^\d{10}$/',
+        'PT' => '/^\d{9}$/',
+        'RO' => '/^\d{2,10}$/',
+        'SK' => '/^\d{10}$/',
+        'SI' => '/^\d{8}$/',
+        'ES' => '/^([A-Z]\d{7}[A-Z0-9]|\d{8}[A-Z])$/',
+        'SE' => '/^\d{12}$/',
+        'XI' => '/^\d{9}$/',
+    ];
+
+    /**
+     * Normalize a VAT number to the raw alphanumeric format expected by the Teamleader Focus API.
+     *
+     * Strips formatting (spaces, dots, dashes) and validates the body against
+     * known EU country patterns. Preserves letters in the body where required
+     * (e.g. FR, NL, IE, ES, AT, CY).
+     *
+     * @param string $vatNumber Raw user input (e.g. "BE 0899.623.035", "FR XX 999999999")
+     * @return string|false The normalized VAT number (e.g. "BE0899623035") or false if invalid
      */
     public static function formatVatNumber(string $vatNumber): string|false
     {
-        // Extract first two and ensure it's valid A-Z
-        $countryCode = strtoupper(substr($vatNumber, 0, 2));
+        // Strip common formatting characters (spaces, dots, dashes, slashes)
+        $normalized = preg_replace('/[\s.\-\/]/', '', $vatNumber);
 
-        // Ensure the country code is valid (basic check: two uppercase letters)
+        // Extract and validate country code (first 2 characters, uppercased)
+        $countryCode = strtoupper(substr($normalized, 0, 2));
+
         if (!preg_match('/^[A-Z]{2}$/', $countryCode)) {
-            return false; // Invalid country code
+            return false;
         }
 
-        // Extract the numerical part and remove non-numeric characters
-        $vatNumber = preg_replace('/[^0-9]/', '', substr($vatNumber, 2));
+        // Uppercase the body — required for pattern matching (NL has "B", FR has letters, etc.)
+        $vatBody = strtoupper(substr($normalized, 2));
 
-        // Ensure it has at least 8 and at most 12 digits (common VAT length range in EU)
-        if (strlen($vatNumber) < 8 || strlen($vatNumber) > 12) {
-            return false; // Invalid format
+        if ($vatBody === '') {
+            return false;
         }
 
-        // Format the VAT number according to common EU formats
-        if (strlen($vatNumber) === 9) {
-            $formattedNumber = substr($vatNumber, 0, 3) . '.' . substr($vatNumber, 3, 3) . '.' . substr($vatNumber, 6, 3);
-        } elseif (strlen($vatNumber) === 10) {
-            $formattedNumber = substr($vatNumber, 0, 4) . '.' . substr($vatNumber, 4, 3) . '.' . substr($vatNumber, 7, 3);
-        } else {
-            $formattedNumber = wordwrap($vatNumber, 3, '.', true); // General formatting
+        // Validate against known EU pattern if available
+        $pattern = self::VAT_PATTERNS[$countryCode] ?? null;
+
+        if ($pattern !== null && !preg_match($pattern, $vatBody)) {
+            return false;
         }
 
-        return $countryCode . ' ' . $formattedNumber;
+        // For unknown country codes, apply a basic alphanumeric length check
+        if ($pattern === null && !preg_match('/^[A-Z0-9]{4,15}$/', $vatBody)) {
+            return false;
+        }
+
+        return $countryCode . $vatBody;
     }
 }
