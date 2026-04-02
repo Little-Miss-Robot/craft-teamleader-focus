@@ -101,6 +101,8 @@ When configuring Teamleader integration in a Formie form, you will see the follo
 
 ⚠️ **Address Mapping Requirement**: Teamleader **requires a full address** (`addressLine1`, `postal_code`, `city`, `country`). If any of these fields are missing, **the address data will NOT appear** in Teamleader.
 
+⚠️ **Country Field**: The `country` field accepts both **ISO codes** (e.g., `BE`, `FR`) and **full country labels** (e.g., `Belgium`, `France`). ISO codes are matched case-insensitively. This is useful when using prefilled dropdowns that pass the code rather than the label.
+
 ### Contact Fields
 
 | Handle                  | Name                         | Type    | Required |
@@ -172,6 +174,8 @@ When updating existing contacts or companies, you can control how tags are handl
 - **Append Company Tags** – When enabled, new tags are added to existing company tags instead of replacing them. This makes an additional API call.
 
 When disabled (default), tags in the form submission will **overwrite** all existing tags on the contact or company.
+
+**Tag Input Formats**: Tags can be provided as an array (e.g., from checkboxes or radio buttons) or as a delimited string from a hidden/text field. Supported delimiters are commas (`,`), semicolons (`;`), and pipes (`|`). For example, `"vip,premium,corporate"` and `"vip;premium|corporate"` are both valid.
 
 ---
 

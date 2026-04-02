@@ -1,11 +1,17 @@
 # Release Notes for Teamleader
 
-# Release Notes for Teamleader
-
 ## 5.2.1 - 2026-04-02
 ### Fixed
 - Fixed country field only accepting labels (e.g., "Belgium") — now also accepts ISO codes (e.g., "BE") from prefilled dropdowns, with case-insensitive matching. ([#8](https://github.com/craftpulse/craft-teamleader-focus/issues/8)) - Thanks [@ishetnogferre](https://github.com/ishetnogferre)
 - Fixed tags field only accepting arrays — now also normalizes comma-, semicolon-, and pipe-separated strings from hidden fields. ([#10](https://github.com/craftpulse/craft-teamleader-focus/issues/10)) - Thanks [@ishetnogferre](https://github.com/ishetnogferre)
+- Fixed empty values in tag arrays not being filtered out, matching the string path behavior.
+- Fixed `VatHelper::formatVatNumber()` stripping letters from non-Belgian EU VAT numbers (FR, NL, IE, ES, etc.) and applying Belgian-specific dot formatting. Now validates against per-country EU patterns and outputs raw alphanumeric format as expected by the Teamleader Focus API.
+- Fixed `IdentityProviderException` being thrown with an empty error message in OAuth client `checkResponse`.
+
+### Changed
+- Removed unused `$options` parameter from `_prepPayload()` and dead `$options` variable in `sendPayload()`.
+- Added explicit `private` visibility to OAuth/API URL constants in auth client (PHP 8.2).
+- Removed unused static `$plugin` property from main plugin class — use inherited `::getInstance()` instead.
 
 ## 5.2.0 - 2026-01-18
 ### Added
