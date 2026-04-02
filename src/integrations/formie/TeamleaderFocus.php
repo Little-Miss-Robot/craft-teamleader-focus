@@ -418,13 +418,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             }
 
             if ($this->mapToDeals && ($this->userId || $this->companyId)) {
-
-                $options = [
-                    'contact_person_id' => $this->userId ?? '',
-                    'company_id' => $this->companyId ?? '',
-                ];
-
-                $dealPayload = $this->_prepPayload($dealsValues, 'deals', $options);
+                $dealPayload = $this->_prepPayload($dealsValues, 'deals');
 
                 $response = $this->deliverPayload($submission, 'deals.create', $dealPayload);
 
@@ -757,10 +751,9 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     /**
      * @param array $fields
      * @param string $context
-     * @param array $options
      * @return array
      */
-    private function _prepPayload(array $fields, string $context, array $options = []): array
+    private function _prepPayload(array $fields, string $context): array
     {
         $payload = $fields;
 
