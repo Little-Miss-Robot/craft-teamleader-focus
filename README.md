@@ -179,6 +179,11 @@ When disabled (default), tags in the form submission will **overwrite** all exis
 
 ---
 
+### Custom fields handling
+When updating existing contact or companies, custom fields are **partially updated** via the parameter `custom_fields_update_strategy` which is set to `partial`, per the [docs on updating collections](https://developer.focus.teamleader.eu/docs/general-principles#collections). This behaviour is currently non-configurable in this plugin.
+
+---
+
 ## B2B vs B2C Workflow
 
 The plugin supports different workflows based on the type of submission:

@@ -115,6 +115,11 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     public ?string $userId = null;
 
     /**
+     * @var array The contexts to update custom fields partially.
+     */
+    public array $partialUpdateCustomFields = ["contacts", "companies"];
+
+    /**
      * @var string The default currency for deals when not mapped from a form field.
      */
     public string $defaultCurrency = 'EUR';
@@ -150,6 +155,11 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      *           When enabled, makes an additional API call to fetch existing tags before update.
      */
     public bool $appendCompanyTags = false;
+
+    /**
+     * @var string The update strategy for custom fields.
+     */
+    public const CUSTOM_FIELDS_UPDATE_STRATEGY_PARTIAL = 'partial';
 
     // Public Methods
     // =========================================================================
@@ -275,6 +285,9 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 if (!empty($currentUser['id'])) {
                     $endpoint = 'contacts.update';
                     $contactPayload['id'] = $currentUser['id'];
+                    if (in_array('contacts', $this->partialUpdateCustomFields)) {
+                        $contactPayload['custom_fields_update_strategy'] = self::CUSTOM_FIELDS_UPDATE_STRATEGY_PARTIAL;
+                    }
                     $this->userId = $currentUser['id'];
                 }
 
@@ -352,6 +365,9 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                     if (!empty($currentCompany['id'])) {
                         $endpoint = 'companies.update';
                         $companyPayload['id'] = $currentCompany['id'];
+                        if (in_array('companies', $this->partialUpdateCustomFields)) {
+                            $companyPayload['custom_fields_update_strategy'] = self::CUSTOM_FIELDS_UPDATE_STRATEGY_PARTIAL;
+                        }
                         $this->companyId = $currentCompany['id'];
                     }
                 }
