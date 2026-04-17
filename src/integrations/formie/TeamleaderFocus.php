@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Teamleader plugin for Craft CMS
  *
@@ -115,6 +116,11 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
     public ?string $userId = null;
 
     /**
+     * @var array The contexts to update custom fields partially.
+     */
+    public array $partialUpdateCustomFields = ["contacts", "companies"];
+
+    /**
      * @var string The default currency for deals when not mapped from a form field.
      */
     public string $defaultCurrency = 'EUR';
@@ -150,6 +156,11 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      *           When enabled, makes an additional API call to fetch existing tags before update.
      */
     public bool $appendCompanyTags = false;
+
+    /**
+     * @var string The update strategy for custom fields.
+     */
+    public const CUSTOM_FIELDS_UPDATE_STRATEGY_PARTIAL = 'partial';
 
     // Public Methods
     // =========================================================================
@@ -275,6 +286,9 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 if (!empty($currentUser['id'])) {
                     $endpoint = 'contacts.update';
                     $contactPayload['id'] = $currentUser['id'];
+                    if (in_array('contacts', $this->partialUpdateCustomFields)) {
+                        $contactPayload['custom_fields_update_strategy'] = self::CUSTOM_FIELDS_UPDATE_STRATEGY_PARTIAL;
+                    }
                     $this->userId = $currentUser['id'];
                 }
 
@@ -338,7 +352,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
                 // only do this if we have an actual VAT number - to save an API call.
                 // create an enum for types to make mapToCompanies or mapToContacts dynamically?
-                if(isset($companyPayload['vat_number'])) {
+                if (isset($companyPayload['vat_number'])) {
                     $filterPayload = [
                         'filter' => [
                             'vat_number' => VatHelper::formatVatNumber($companyValues['vat_number']),
@@ -352,6 +366,9 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                     if (!empty($currentCompany['id'])) {
                         $endpoint = 'companies.update';
                         $companyPayload['id'] = $currentCompany['id'];
+                        if (in_array('companies', $this->partialUpdateCustomFields)) {
+                            $companyPayload['custom_fields_update_strategy'] = self::CUSTOM_FIELDS_UPDATE_STRATEGY_PARTIAL;
+                        }
                         $this->companyId = $currentCompany['id'];
                     }
                 }
@@ -374,7 +391,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                     return true;
                 }
 
-                if($endpoint === 'companies.add') {
+                if ($endpoint === 'companies.add') {
                     $this->companyId = $response['data']['id'] ?? null;
 
                     if (is_null($this->companyId)) {
@@ -409,12 +426,30 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
             // Link contact to company if enabled and both IDs exist
             if ($this->linkToCompany && $this->userId && $this->companyId && $isCompanyRequest) {
-                $linkPayload = [
-                    'id' => $this->userId,
-                    'company_id' => $this->companyId,
-                ];
+                // Get company info with related contacts
+                $response = $this->deliverPayload($submission, 'companies.info', [
+                    'id' => $this->companyId,
+                    'includes' => ['related_contacts'],
+                ]);
 
-                $this->deliverPayload($submission, 'contacts.linkToCompany', $linkPayload);
+                // Check related_contacts items for the contact id on id
+                $relatedContacts = $response['data']['related_contacts'] ?? [];
+                $alreadyLinked = false;
+                foreach ($relatedContacts as $relatedContact) {
+                    if ($relatedContact['id'] === $this->userId) {
+                        $alreadyLinked = true;
+                        break;
+                    }
+                }
+
+                if (!$alreadyLinked) {
+                    $linkPayload = [
+                        'id' => $this->userId,
+                        'company_id' => $this->companyId,
+                    ];
+
+                    $this->deliverPayload($submission, 'contacts.linkToCompany', $linkPayload);
+                }
             }
 
             if ($this->mapToDeals && ($this->userId || $this->companyId)) {
@@ -675,7 +710,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
         return [];
     }
-    
+
     /**
      * @param string $context
      * @return array
@@ -774,7 +809,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
         }
 
         if (in_array($context, ['contacts', 'companies'])) {
-            if(isset($payload['email'])) {
+            if (isset($payload['email'])) {
                 $payload['emails'][] = [
                     'type' => 'primary',
                     'email' => $payload['email'],
@@ -782,7 +817,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
                 unset($payload['email']);
             }
 
-            if(isset($payload['phone'])) {
+            if (isset($payload['phone'])) {
                 $payload['telephones'][] = [
                     'type' => 'phone',
                     'number' => $payload['phone'],
@@ -801,11 +836,11 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
             $addressSource = $payload['address'] ?? (isset($payload['addressLine1']) ? $payload : null);
 
             if ($addressSource && $address = $this->_generateAddressObject($addressSource)) {
-                    $payload['addresses'][] = $address;
-                    unset($payload['addressLine1'], $payload['postal_code'], $payload['city'], $payload['country']);
+                $payload['addresses'][] = $address;
+                unset($payload['addressLine1'], $payload['postal_code'], $payload['city'], $payload['country']);
             }
 
-            if(isset($payload['company_name'])) {
+            if (isset($payload['company_name'])) {
                 $payload['name'] = $payload['company_name'];
                 unset($payload['company_name']);
             }
@@ -879,7 +914,8 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
      * @param array $fields
      * @return array|null
      */
-    private function _generateAddressObject(array $fields): ?array {
+    private function _generateAddressObject(array $fields): ?array
+    {
         // All fields need to be there, otherwise we won't generate it.
         $required_fields = ['addressLine1', 'postal_code', 'city', 'country'];
         $missing_values = array_diff($required_fields, array_keys($fields));
@@ -898,7 +934,7 @@ class TeamleaderFocus extends Crm implements OAuthProviderInterface
 
         // If country is not found, return error.
         if (!$country) {
-            Integration::error($this, Craft::t('formie', 'Missing country code {country}. Sent payload {payload}', [ 'country' => $fields['country'], 'payload' => Json::encode($fields) ]), true);
+            Integration::error($this, Craft::t('formie', 'Missing country code {country}. Sent payload {payload}', ['country' => $fields['country'], 'payload' => Json::encode($fields)]), true);
 
             return null;
         }
